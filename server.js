@@ -113,6 +113,12 @@ app.delete('/api/logs/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+app.delete('/api/logs', (req, res) => {
+  run('DELETE FROM logs');
+  saveDbNow();
+  res.json({ ok: true });
+});
+
 // ========== 大事记 API ==========
 app.get('/api/events', (req, res) => {
   const { office, dateFrom, dateTo, keyword, page = 1, pageSize = 10 } = req.query;
@@ -160,6 +166,12 @@ app.get('/api/events/:id', (req, res) => {
 
 app.delete('/api/events/:id', (req, res) => {
   run('DELETE FROM events WHERE id=?', [req.params.id]);
+  res.json({ ok: true });
+});
+
+app.delete('/api/events', (req, res) => {
+  run('DELETE FROM events');
+  saveDbNow();
   res.json({ ok: true });
 });
 
@@ -257,19 +269,14 @@ app.get('/api/backup', (req, res) => {
   });
 });
 
-// ========== 数据恢复 API ==========
+// ========== 数据恢复 API（追加模式，保留原数据） ==========
 app.post('/api/restore', (req, res) => {
   const { logs, events, offices, persons } = req.body;
   if (!logs && !events && !offices && !persons) {
     return res.status(400).json({ error: '备份数据为空' });
   }
 
-  // 清空现有数据
-  run('DELETE FROM logs');
-  run('DELETE FROM events');
-  run('DELETE FROM offices');
-  run('DELETE FROM persons');
-  run("DELETE FROM meta WHERE key='seeded'");
+  // 追加模式：不清空现有数据，跳过已存在的记录（INSERT OR IGNORE）
 
   // 恢复处室
   if (offices && offices.length) {
@@ -306,7 +313,12 @@ app.post('/api/restore', (req, res) => {
   // 标记为已初始化
   run("INSERT OR REPLACE INTO meta (key, value) VALUES ('seeded', '1')");
   saveDbNow();
-  res.json({ ok: true, message: '数据恢复成功', logCount: logs ? logs.length : 0, eventCount: events ? events.length : 0 });
+
+  const logCount = get('SELECT COUNT(*) as c FROM logs').c;
+  const eventCount = get('SELECT COUNT(*) as c FROM events').c;
+  const officeCount = get('SELECT COUNT(*) as c FROM offices').c;
+  const personCount = get('SELECT COUNT(*) as c FROM persons').c;
+  res.json({ ok: true, message: '数据导入成功（追加模式，原数据已保留）', logCount, eventCount, officeCount, personCount });
 });
 
 // ========== 种子数据 ==========

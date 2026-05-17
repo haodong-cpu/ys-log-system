@@ -355,6 +355,7 @@ body {
     <div class="header-actions" style="margin-bottom:16px;">
       <button class="btn btn-gold" onclick="openAddEventModal()">＋ 新增大事记</button>
       <button class="btn btn-outline-red" style="color:var(--red-primary);border-color:var(--red-primary);" onclick="openExportModal('event')">📄 导出大事记Word</button>
+      <button class="btn btn-outline-red" style="margin-left:auto;color:#C41A1A;border-color:#C41A1A;" onclick="confirmDeleteAllEvents()">🗑 全部删除</button>
     </div>
     <div class="log-list" id="eventList"></div>
     <div class="pagination" id="eventPagination"></div>
@@ -378,6 +379,7 @@ body {
     <div class="header-actions" style="margin-bottom:16px;">
       <button class="btn btn-gold" onclick="openAddLogModal()">＋ 新增要事</button>
       <button class="btn btn-outline-red" style="color:var(--red-primary);border-color:var(--red-primary);" onclick="openExportModal('log')">📄 导出要事日志Word</button>
+      <button class="btn btn-outline-red" style="margin-left:auto;color:#C41A1A;border-color:#C41A1A;" onclick="confirmDeleteAllLogs()">🗑 全部删除</button>
     </div>
     <div class="log-list" id="logList"></div>
     <div class="pagination" id="logPagination"></div>
@@ -407,7 +409,7 @@ body {
     <div style="background:#fff;border:1px solid var(--border-gold);border-radius:6px;padding:24px;box-shadow:0 1px 4px var(--shadow-gold);margin-bottom:18px;">
       <h3 style="color:var(--red-dark);margin-bottom:16px;font-size:18px;letter-spacing:2px;">💾 数据备份与恢复</h3>
       <p style="color:var(--text-secondary);margin-bottom:20px;line-height:1.8;font-size:14px;">
-        备份功能可将所有数据导出为JSON文件保存到本地。当系统重装或更换设备时，可通过恢复功能将数据还原。<br>
+        备份功能可将所有数据导出为JSON文件保存到本地。导入备份时会保留现有数据，重复记录自动跳过。<br>
         <strong style="color:var(--red-primary);">建议定期备份，确保数据安全。</strong>
       </p>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
@@ -709,6 +711,18 @@ async function apiDeleteAllOffices() {
   return res.json();
 }
 
+async function apiDeleteAllLogs() {
+  const res = await fetch('/api/logs', { method: 'DELETE' });
+  if (!res.ok) throw new Error('删除所有要事日志失败');
+  return res.json();
+}
+
+async function apiDeleteAllEvents() {
+  const res = await fetch('/api/events', { method: 'DELETE' });
+  if (!res.ok) throw new Error('删除所有大事记失败');
+  return res.json();
+}
+
 async function apiReorderOffices(ids) {
   const res = await fetch('/api/offices/reorder', {
     method: 'PUT',
@@ -912,6 +926,24 @@ async function confirmDeleteAllOffices() {
     await renderOfficeList();
     await refreshEventOfficeFilter();
     showToast('所有承办处室已删除');
+  });
+}
+
+async function confirmDeleteAllLogs() {
+  setConfirm('确认全部删除', '确定要删除所有要事日志吗？此操作不可撤销。', async function() {
+    await apiDeleteAllLogs();
+    await renderLogList();
+    await updateBackupInfo();
+    showToast('所有要事日志已删除');
+  });
+}
+
+async function confirmDeleteAllEvents() {
+  setConfirm('确认全部删除', '确定要删除所有大事记吗？此操作不可撤销。', async function() {
+    await apiDeleteAllEvents();
+    await renderEventList();
+    await updateBackupInfo();
+    showToast('所有大事记已删除');
   });
 }
 
@@ -1540,12 +1572,12 @@ async function importBackup(event) {
         showToast('无效的备份文件格式');
         return;
       }
-      var msg = '将恢复：' +
+      var msg = '将导入：' +
         (data.logs ? data.logs.length + '条要事日志' : '') +
         (data.events ? (data.logs ? '、' : '') + data.events.length + '条大事记' : '') +
         (data.offices ? (data.logs||data.events ? '、' : '') + data.offices.length + '个处室' : '') +
         (data.persons ? (data.logs||data.events||data.offices ? '、' : '') + data.persons.length + '个人员' : '') +
-        '。当前所有数据将被覆盖，确定要继续吗？';
+        '。原数据将保留，重复记录会自动跳过，确定要继续吗？';
       if (!confirm(msg)) return;
 
       var res = await fetch('/api/restore', {
@@ -1555,7 +1587,7 @@ async function importBackup(event) {
       });
       var result = await res.json();
       if (result.ok) {
-        showToast('数据恢复成功！共恢复 ' + (result.logCount||0) + ' 条日志，' + (result.eventCount||0) + ' 条大事记');
+        showToast('数据导入成功！现有要事日志 ' + (result.logCount||0) + ' 条，大事记 ' + (result.eventCount||0) + ' 条，处室 ' + (result.officeCount||0) + ' 个，人员 ' + (result.personCount||0) + ' 人');
         await fillFormSelects();
         await updateBackupInfo();
       } else {
