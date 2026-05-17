@@ -327,8 +327,8 @@ body {
     <div class="header-actions" id="headerActions"></div>
   </div>
   <div class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('log')">📋 要事日志</button>
-    <button class="tab-btn" onclick="switchTab('event')">📑 大事记</button>
+    <button class="tab-btn active" onclick="switchTab('event')">📑 大事记</button>
+    <button class="tab-btn" onclick="switchTab('log')">📋 要事日志</button>
     <button class="tab-btn" onclick="switchTab('office')">🏢 承办处室</button>
     <button class="tab-btn" onclick="switchTab('person')">👤 录入人员</button>
     <button class="tab-btn" onclick="switchTab('backup')">💾 数据备份</button>
@@ -337,31 +337,8 @@ body {
 
 <div class="main">
 
-  <!-- 要事日志 Tab -->
-  <div class="tab-content active" id="tab-log">
-    <div class="stats-bar" id="statsBar"></div>
-    <div class="toolbar" id="logToolbar">
-      <label>日期从</label>
-      <input type="date" id="filterDateFrom" onchange="renderLogList()">
-      <label>至</label>
-      <input type="date" id="filterDateTo" onchange="renderLogList()">
-      <div class="sep"></div>
-      <label>录入人员</label>
-      <select id="filterRecorder" onchange="renderLogList()"><option value="">全部</option></select>
-      <label>关键词</label>
-      <input type="text" id="filterKeyword" placeholder="搜索标题/内容" oninput="renderLogList()">
-      <button class="btn btn-sm btn-outline-red" style="margin-left:auto;" onclick="clearLogFilters()">重置</button>
-    </div>
-    <div class="header-actions" style="margin-bottom:16px;">
-      <button class="btn btn-gold" onclick="openAddLogModal()">＋ 新增要事</button>
-      <button class="btn btn-outline-red" style="color:var(--red-primary);border-color:var(--red-primary);" onclick="openExportModal('log')">📄 导出要事日志Word</button>
-    </div>
-    <div class="log-list" id="logList"></div>
-    <div class="pagination" id="logPagination"></div>
-  </div>
-
   <!-- 大事记 Tab -->
-  <div class="tab-content" id="tab-event">
+  <div class="tab-content active" id="tab-event">
     <div class="stats-bar" id="eventStatsBar"></div>
     <div class="toolbar">
       <label>日期从</label>
@@ -381,6 +358,29 @@ body {
     </div>
     <div class="log-list" id="eventList"></div>
     <div class="pagination" id="eventPagination"></div>
+  </div>
+
+  <!-- 要事日志 Tab -->
+  <div class="tab-content" id="tab-log">
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="toolbar" id="logToolbar">
+      <label>日期从</label>
+      <input type="date" id="filterDateFrom" onchange="renderLogList()">
+      <label>至</label>
+      <input type="date" id="filterDateTo" onchange="renderLogList()">
+      <div class="sep"></div>
+      <label>录入人员</label>
+      <select id="filterRecorder" onchange="renderLogList()"><option value="">全部</option></select>
+      <label>关键词</label>
+      <input type="text" id="filterKeyword" placeholder="搜索标题/内容" oninput="renderLogList()">
+      <button class="btn btn-sm btn-outline-red" style="margin-left:auto;" onclick="clearLogFilters()">重置</button>
+    </div>
+    <div class="header-actions" style="margin-bottom:16px;">
+      <button class="btn btn-gold" onclick="openAddLogModal()">＋ 新增要事</button>
+      <button class="btn btn-outline-red" style="color:var(--red-primary);border-color:var(--red-primary);" onclick="openExportModal('log')">📄 导出要事日志Word</button>
+    </div>
+    <div class="log-list" id="logList"></div>
+    <div class="pagination" id="logPagination"></div>
   </div>
 
   <!-- 承办处室管理 Tab -->
@@ -785,7 +785,7 @@ function fillSelect(elId, items, hasEmpty) {
 async function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
   document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-  var btnMap = { log:0, event:1, office:2, person:3, backup:4 };
+  var btnMap = { event:0, log:1, office:2, person:3, backup:4 };
   document.querySelectorAll('.tab-btn')[btnMap[tab]].classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'log') { await refreshRecorderFilter(); await renderLogList(); }
@@ -1578,7 +1578,7 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
   try {
     await seedData();
     await fillFormSelects();
-    await renderLogList();
+    await renderEventList();
   } catch (e) {
     console.error('初始化失败:', e);
     showToast('初始化失败，请刷新页面重试');
