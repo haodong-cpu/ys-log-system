@@ -80,7 +80,7 @@ app.get('/api/logs', (req, res) => {
   const totalRow = get(countSql, params.length ? params : undefined);
   const total = totalRow ? totalRow.total : 0;
 
-  sql += ' ORDER BY date ASC, createTime ASC LIMIT ? OFFSET ?';
+  sql += ' ORDER BY date DESC, createTime DESC LIMIT ? OFFSET ?';
   params.push(Number(pageSize), (Number(page) - 1) * Number(pageSize));
 
   const rows = all(sql, params);
@@ -130,7 +130,7 @@ app.get('/api/events', (req, res) => {
   const totalRow = get(countSql, params.length ? params : undefined);
   const total = totalRow ? totalRow.total : 0;
 
-  sql += ' ORDER BY date ASC, createTime ASC LIMIT ? OFFSET ?';
+  sql += ' ORDER BY date DESC, createTime DESC LIMIT ? OFFSET ?';
   params.push(Number(pageSize), (Number(page) - 1) * Number(pageSize));
 
   const rows = all(sql, params);
@@ -246,8 +246,8 @@ app.get('/api/stats', (req, res) => {
 
 // ========== 数据备份 API ==========
 app.get('/api/backup', (req, res) => {
-  const logs = all('SELECT * FROM logs ORDER BY date ASC, createTime ASC');
-  const events = all('SELECT * FROM events ORDER BY date ASC, createTime ASC');
+  const logs = all('SELECT * FROM logs ORDER BY date DESC, createTime DESC');
+  const events = all('SELECT * FROM events ORDER BY date DESC, createTime DESC');
   const offices = all('SELECT * FROM offices ORDER BY sortOrder ASC, id ASC');
   const persons = all('SELECT * FROM persons ORDER BY id ASC');
   res.json({
@@ -315,7 +315,7 @@ app.post('/api/seed', (req, res) => {
   if (seeded) return res.json({ ok: true, message: '已初始化' });
 
   // 默认处室
-  const defaultOffices = ['综合部','教务部','科研部','学员部','交流合作部','后勤部'];
+  const defaultOffices = ['院务办公室','党委办公室','教学科研培训处','中华文化工作处','人事处','总务处'];
   defaultOffices.forEach((name, idx) => {
     const existing = get('SELECT id FROM offices WHERE name=?', [name]);
     if (!existing) run('INSERT INTO offices (id, name, sortOrder) VALUES (?, ?, ?)', [genId(), name, idx + 1]);
@@ -350,7 +350,7 @@ app.post('/api/seed', (req, res) => {
   // 10条大事记
   const evtTitles = ['举办2026年春季开学典礼','召开院务工作会议','开展统战理论研讨','组织学员社会实践','举办专题讲座','推进信息化建设','完成教学评估自查','召开民主生活会','组织红色教育活动','举办结业典礼'];
   const evtContents = ['学院隆重举行2026年春季学期开学典礼，省委统战部领导出席并讲话。','召开院务工作会议，研究部署本学期重点工作任务。','围绕新时代统战工作理论创新开展专题研讨，形成研究成果。','组织学员赴基层开展社会实践活动，深入了解社情民意。','邀请知名专家举办统战工作专题讲座，取得良好效果。','启动学院信息化建设二期工程，推进智慧校园建设。','按照评估指标体系完成教学评估自查工作，形成自查报告。','按照组织要求召开民主生活会，开展批评与自我批评。','组织教职工和学员赴革命教育基地开展红色教育活动。','圆满完成本学期培训任务，举行结业典礼并颁发证书。'];
-  const evtOffices = ['综合部','综合部、教务部','科研部','学员部','教务部、科研部','综合部','教务部','综合部','学员部、交流合作部','教务部、学员部'];
+  const evtOffices = ['院务办公室','院务办公室、党委办公室','教学科研培训处','中华文化工作处','党委办公室、教学科研培训处','院务办公室','教学科研培训处','院务办公室','中华文化工作处、人事处','教学科研培训处、总务处'];
   for (let i = 0; i < 10; i++) {
     const d = '2026-05-' + String(i + 1).padStart(2, '0');
     run('INSERT INTO events (id, date, office, title, content) VALUES (?, ?, ?, ?, ?)',
