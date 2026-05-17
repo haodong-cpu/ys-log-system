@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: ys-log-system
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: ./data

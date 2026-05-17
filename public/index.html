@@ -331,6 +331,7 @@ body {
     <button class="tab-btn" onclick="switchTab('event')">📑 大事记</button>
     <button class="tab-btn" onclick="switchTab('office')">🏢 承办处室</button>
     <button class="tab-btn" onclick="switchTab('person')">👤 录入人员</button>
+    <button class="tab-btn" onclick="switchTab('backup')">💾 数据备份</button>
   </div>
 </div>
 
@@ -399,6 +400,32 @@ body {
       <button class="btn btn-red" onclick="addPerson()">＋ 添加人员</button>
     </div>
     <div class="mgmt-list" id="personList"></div>
+  </div>
+
+  <!-- 数据备份 Tab -->
+  <div class="tab-content" id="tab-backup">
+    <div style="background:#fff;border:1px solid var(--border-gold);border-radius:6px;padding:24px;box-shadow:0 1px 4px var(--shadow-gold);margin-bottom:18px;">
+      <h3 style="color:var(--red-dark);margin-bottom:16px;font-size:18px;letter-spacing:2px;">💾 数据备份与恢复</h3>
+      <p style="color:var(--text-secondary);margin-bottom:20px;line-height:1.8;font-size:14px;">
+        备份功能可将所有数据导出为JSON文件保存到本地。当系统重装或更换设备时，可通过恢复功能将数据还原。<br>
+        <strong style="color:var(--red-primary);">建议定期备份，确保数据安全。</strong>
+      </p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
+        <button class="btn btn-gold" onclick="exportBackup()" style="padding:12px 28px;font-size:15px;">📥 导出备份文件</button>
+        <button class="btn btn-outline-red" onclick="document.getElementById('importBackupFile').click()" style="padding:12px 28px;font-size:15px;">📤 导入备份文件</button>
+        <input type="file" id="importBackupFile" accept=".json" style="display:none;" onchange="importBackup(event)">
+      </div>
+      <div id="backupInfo" style="padding:12px 16px;background:var(--gold-pale);border:1px solid var(--gold-primary);border-radius:4px;font-size:13px;color:var(--text-secondary);"></div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--border-gold);border-radius:6px;padding:24px;box-shadow:0 1px 4px var(--shadow-gold);">
+      <h3 style="color:var(--red-dark);margin-bottom:16px;font-size:18px;letter-spacing:2px;">⚠️ 云端部署说明</h3>
+      <div style="font-size:14px;line-height:2;color:var(--text-secondary);">
+        <p>本系统已支持云端部署，部署后可通过手机和电脑随时访问。</p>
+        <p><strong>重要提醒：</strong>云端免费版存储为临时存储，服务器重启后数据可能丢失。</p>
+        <p>请养成<span style="color:var(--red-primary);font-weight:bold;">定期导出备份</span>的习惯，确保数据安全。</p>
+        <p>每次系统更新代码前，务必先导出备份！</p>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -758,13 +785,14 @@ function fillSelect(elId, items, hasEmpty) {
 async function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
   document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-  var btnMap = { log:0, event:1, office:2, person:3 };
+  var btnMap = { log:0, event:1, office:2, person:3, backup:4 };
   document.querySelectorAll('.tab-btn')[btnMap[tab]].classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'log') { await refreshRecorderFilter(); await renderLogList(); }
   if (tab === 'event') { await refreshEventOfficeFilter(); await renderEventList(); }
   if (tab === 'office') await renderOfficeList();
   if (tab === 'person') await renderPersonList();
+  if (tab === 'backup') await updateBackupInfo();
 }
 
 async function refreshRecorderFilter() {
@@ -1467,6 +1495,77 @@ function downloadWord(rowsHtml, headers, title, wordTitle, earliestDate, latestD
   a.href = url; a.download = wordTitle + '_' + new Date().toISOString().slice(0,10) + '.doc';
   a.click(); URL.revokeObjectURL(url);
   showToast('Word文档已导出');
+}
+
+/* ========== 数据备份与恢复 ========== */
+async function updateBackupInfo() {
+  try {
+    var res = await fetch('/api/stats');
+    var stats = await res.json();
+    document.getElementById('backupInfo').innerHTML =
+      '当前数据：要事日志 <strong>' + (stats.logCount||0) + '</strong> 条，大事记 <strong>' + (stats.eventCount||0) + '</strong> 条，承办处室 <strong>' + (stats.officeCount||0) + '</strong> 个，录入人员 <strong>' + (stats.personCount||0) + '</strong> 人';
+  } catch(e) {
+    document.getElementById('backupInfo').textContent = '获取统计信息失败';
+  }
+}
+
+async function exportBackup() {
+  try {
+    var res = await fetch('/api/backup');
+    var data = await res.json();
+    var json = JSON.stringify(data, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '要事日志备份_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('备份文件已导出');
+  } catch(e) {
+    showToast('导出备份失败：' + e.message);
+  }
+}
+
+async function importBackup(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!data.logs && !data.events && !data.offices && !data.persons) {
+        showToast('无效的备份文件格式');
+        return;
+      }
+      var msg = '将恢复：' +
+        (data.logs ? data.logs.length + '条要事日志' : '') +
+        (data.events ? (data.logs ? '、' : '') + data.events.length + '条大事记' : '') +
+        (data.offices ? (data.logs||data.events ? '、' : '') + data.offices.length + '个处室' : '') +
+        (data.persons ? (data.logs||data.events||data.offices ? '、' : '') + data.persons.length + '个人员' : '') +
+        '。当前所有数据将被覆盖，确定要继续吗？';
+      if (!confirm(msg)) return;
+
+      var res = await fetch('/api/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      var result = await res.json();
+      if (result.ok) {
+        showToast('数据恢复成功！共恢复 ' + (result.logCount||0) + ' 条日志，' + (result.eventCount||0) + ' 条大事记');
+        await fillFormSelects();
+        await updateBackupInfo();
+      } else {
+        showToast('恢复失败：' + (result.error || '未知错误'));
+      }
+    } catch(err) {
+      showToast('文件解析失败：' + err.message);
+    }
+  };
+  reader.readAsText(file);
 }
 
 /* ========== 遮罩关闭 ========== */

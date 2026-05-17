@@ -244,6 +244,71 @@ app.get('/api/stats', (req, res) => {
   res.json({ logCount, eventCount, officeCount, personCount });
 });
 
+// ========== 数据备份 API ==========
+app.get('/api/backup', (req, res) => {
+  const logs = all('SELECT * FROM logs ORDER BY date ASC, createTime ASC');
+  const events = all('SELECT * FROM events ORDER BY date ASC, createTime ASC');
+  const offices = all('SELECT * FROM offices ORDER BY sortOrder ASC, id ASC');
+  const persons = all('SELECT * FROM persons ORDER BY id ASC');
+  res.json({
+    version: '1.0',
+    exportTime: new Date().toISOString(),
+    logs, events, offices, persons
+  });
+});
+
+// ========== 数据恢复 API ==========
+app.post('/api/restore', (req, res) => {
+  const { logs, events, offices, persons } = req.body;
+  if (!logs && !events && !offices && !persons) {
+    return res.status(400).json({ error: '备份数据为空' });
+  }
+
+  // 清空现有数据
+  run('DELETE FROM logs');
+  run('DELETE FROM events');
+  run('DELETE FROM offices');
+  run('DELETE FROM persons');
+  run("DELETE FROM meta WHERE key='seeded'");
+
+  // 恢复处室
+  if (offices && offices.length) {
+    offices.forEach(o => {
+      run('INSERT OR IGNORE INTO offices (id, name, sortOrder) VALUES (?, ?, ?)',
+        [o.id, o.name, o.sortOrder || 0]);
+    });
+  }
+
+  // 恢复人员
+  if (persons && persons.length) {
+    persons.forEach(p => {
+      run('INSERT OR IGNORE INTO persons (id, name) VALUES (?, ?)',
+        [p.id, p.name]);
+    });
+  }
+
+  // 恢复要事日志
+  if (logs && logs.length) {
+    logs.forEach(l => {
+      run('INSERT OR IGNORE INTO logs (id, date, recorder, title, content, remark, createTime) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [l.id, l.date, l.recorder || '', l.title, l.content || '', l.remark || '', l.createTime || '']);
+    });
+  }
+
+  // 恢复大事记
+  if (events && events.length) {
+    events.forEach(e => {
+      run('INSERT OR IGNORE INTO events (id, date, office, title, content, createTime) VALUES (?, ?, ?, ?, ?, ?)',
+        [e.id, e.date, e.office || '', e.title, e.content || '', e.createTime || '']);
+    });
+  }
+
+  // 标记为已初始化
+  run("INSERT OR REPLACE INTO meta (key, value) VALUES ('seeded', '1')");
+  saveDbNow();
+  res.json({ ok: true, message: '数据恢复成功', logCount: logs ? logs.length : 0, eventCount: events ? events.length : 0 });
+});
+
 // ========== 种子数据 ==========
 app.post('/api/seed', (req, res) => {
   const seeded = get("SELECT value FROM meta WHERE key='seeded'");
