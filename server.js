@@ -9,10 +9,12 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'ys_log.db');
 
-// 管理员认证配置
-const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
-const TOKENS = new Set(); // 存放有效的登录 token
+// 管理员默认账号（首次启动时写入users表）
+const DEFAULT_ADMIN_USER = process.env.ADMIN_USER || 'admin';
+const DEFAULT_ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
+
+// Token存储：token -> { username, role, displayName }
+const TOKENS = new Map();
 
 // 确保数据目录存在
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -27,6 +29,21 @@ function authRequired(req, res, next) {
   if (!token || !TOKENS.has(token)) {
     return res.status(401).json({ error: '未登录或登录已过期' });
   }
+  req.user = TOKENS.get(token);
+  next();
+}
+
+// 仅管理员可访问
+function adminRequired(req, res, next) {
+  const token = req.headers['authorization']?.replace('Bearer ', '');
+  if (!token || !TOKENS.has(token)) {
+    return res.status(401).json({ error: '未登录或登录已过期' });
+  }
+  const user = TOKENS.get(token);
+  if (user.role !== 'admin') {
+    return res.status(403).json({ error: '权限不足，需要管理员权限' });
+  }
+  req.user = user;
   next();
 }
 
@@ -92,13 +109,19 @@ function get(sql, params) {
 // ========== 登录 API ==========
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    const token = crypto.randomBytes(32).toString('hex');
-    TOKENS.add(token);
-    res.json({ ok: true, token, username: ADMIN_USER });
-  } else {
-    res.status(401).json({ error: '用户名或密码错误' });
+  // 查询users表
+  const user = get('SELECT * FROM users WHERE username = ?', [username]);
+  if (!user) {
+    return res.status(401).json({ error: '用户名或密码错误' });
   }
+  // 简单密码比对（明文，小型系统够用）
+  if (user.password !== password) {
+    return res.status(401).json({ error: '用户名或密码错误' });
+  }
+  const token = crypto.randomBytes(32).toString('hex');
+  const userInfo = { username: user.username, role: user.role, displayName: user.displayName || user.username };
+  TOKENS.set(token, userInfo);
+  res.json({ ok: true, token, username: user.username, role: user.role, displayName: userInfo.displayName });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -109,7 +132,12 @@ app.post('/api/logout', (req, res) => {
 
 app.get('/api/check-auth', (req, res) => {
   const token = req.headers['authorization']?.replace('Bearer ', '');
-  res.json({ authenticated: !!(token && TOKENS.has(token)) });
+  if (token && TOKENS.has(token)) {
+    const user = TOKENS.get(token);
+    res.json({ authenticated: true, username: user.username, role: user.role, displayName: user.displayName });
+  } else {
+    res.json({ authenticated: false });
+  }
 });
 
 // ========== 要事日志 API ==========
@@ -221,13 +249,13 @@ app.delete('/api/events', authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
-// ========== 承办处室 API ==========
+// ========== 承办处室 API（仅管理员可写） ==========
 app.get('/api/offices', (req, res) => {
   const rows = all('SELECT * FROM offices ORDER BY sortOrder ASC, id ASC');
   res.json(rows);
 });
 
-app.post('/api/offices', authRequired, (req, res) => {
+app.post('/api/offices', adminRequired, (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: '处室名称不能为空' });
   const existing = get('SELECT id FROM offices WHERE name = ?', [name]);
@@ -239,24 +267,24 @@ app.post('/api/offices', authRequired, (req, res) => {
   res.json({ id, ok: true });
 });
 
-app.put('/api/offices/:id', authRequired, (req, res) => {
+app.put('/api/offices/:id', adminRequired, (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: '处室名称不能为空' });
   run('UPDATE offices SET name=? WHERE id=?', [name, req.params.id]);
   res.json({ ok: true });
 });
 
-app.delete('/api/offices/:id', authRequired, (req, res) => {
+app.delete('/api/offices/:id', adminRequired, (req, res) => {
   run('DELETE FROM offices WHERE id=?', [req.params.id]);
   res.json({ ok: true });
 });
 
-app.delete('/api/offices', authRequired, (req, res) => {
+app.delete('/api/offices', adminRequired, (req, res) => {
   run('DELETE FROM offices');
   res.json({ ok: true });
 });
 
-app.put('/api/offices/reorder', authRequired, (req, res) => {
+app.put('/api/offices/reorder', adminRequired, (req, res) => {
   const { ids } = req.body;
   ids.forEach((id, idx) => {
     run('UPDATE offices SET sortOrder=? WHERE id=?', [idx + 1, id]);
@@ -265,13 +293,13 @@ app.put('/api/offices/reorder', authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
-// ========== 录入人员 API ==========
+// ========== 录入人员 API（仅管理员可写） ==========
 app.get('/api/persons', (req, res) => {
   const rows = all('SELECT * FROM persons ORDER BY id ASC');
   res.json(rows);
 });
 
-app.post('/api/persons', authRequired, (req, res) => {
+app.post('/api/persons', adminRequired, (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: '人员姓名不能为空' });
   const existing = get('SELECT id FROM persons WHERE name = ?', [name]);
@@ -281,15 +309,75 @@ app.post('/api/persons', authRequired, (req, res) => {
   res.json({ id, ok: true });
 });
 
-app.put('/api/persons/:id', authRequired, (req, res) => {
+app.put('/api/persons/:id', adminRequired, (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: '人员姓名不能为空' });
   run('UPDATE persons SET name=? WHERE id=?', [name, req.params.id]);
   res.json({ ok: true });
 });
 
-app.delete('/api/persons/:id', authRequired, (req, res) => {
+app.delete('/api/persons/:id', adminRequired, (req, res) => {
   run('DELETE FROM persons WHERE id=?', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// ========== 用户管理 API（仅管理员） ==========
+app.get('/api/users', adminRequired, (req, res) => {
+  const rows = all('SELECT id, username, role, displayName, createTime FROM users ORDER BY createTime ASC');
+  res.json(rows);
+});
+
+app.post('/api/users', adminRequired, (req, res) => {
+  const { username, password, role, displayName } = req.body;
+  if (!username || !password) return res.status(400).json({ error: '用户名和密码不能为空' });
+  if (!['admin', 'recorder'].includes(role)) return res.status(400).json({ error: '角色只能为 admin 或 recorder' });
+  const existing = get('SELECT id FROM users WHERE username = ?', [username]);
+  if (existing) return res.status(400).json({ error: '用户名已存在' });
+  const id = genId();
+  run('INSERT INTO users (id, username, password, role, displayName) VALUES (?, ?, ?, ?, ?)',
+    [id, username, password, role, displayName || '']);
+  res.json({ id, ok: true });
+});
+
+app.put('/api/users/:id', adminRequired, (req, res) => {
+  const { password, role, displayName } = req.body;
+  const user = get('SELECT * FROM users WHERE id = ?', [req.params.id]);
+  if (!user) return res.status(404).json({ error: '用户不存在' });
+
+  // 不能把自己降级为非admin
+  if (user.username === req.user.username && role && role !== 'admin') {
+    return res.status(400).json({ error: '不能取消自己的管理员权限' });
+  }
+
+  const newRole = role || user.role;
+  if (!['admin', 'recorder'].includes(newRole)) return res.status(400).json({ error: '角色只能为 admin 或 recorder' });
+  const newPass = password || user.password;
+  const newName = displayName !== undefined ? displayName : user.displayName;
+  run('UPDATE users SET password=?, role=?, displayName=? WHERE id=?',
+    [newPass, newRole, newName, req.params.id]);
+  res.json({ ok: true });
+});
+
+app.delete('/api/users/:id', adminRequired, (req, res) => {
+  const user = get('SELECT * FROM users WHERE id = ?', [req.params.id]);
+  if (!user) return res.status(404).json({ error: '用户不存在' });
+  // 不能删除自己
+  if (user.username === req.user.username) {
+    return res.status(400).json({ error: '不能删除自己的账号' });
+  }
+  run('DELETE FROM users WHERE id=?', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// 修改自己的密码（任何登录用户都可）
+app.put('/api/change-password', authRequired, (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) return res.status(400).json({ error: '请输入旧密码和新密码' });
+  const user = get('SELECT * FROM users WHERE username = ?', [req.user.username]);
+  if (!user || user.password !== oldPassword) {
+    return res.status(400).json({ error: '旧密码不正确' });
+  }
+  run('UPDATE users SET password=? WHERE username=?', [newPassword, req.user.username]);
   res.json({ ok: true });
 });
 
@@ -316,7 +404,7 @@ app.get('/api/backup', (req, res) => {
 });
 
 // ========== 数据恢复 API（追加模式，保留原数据） ==========
-app.post('/api/restore', authRequired, (req, res) => {
+app.post('/api/restore', adminRequired, (req, res) => {
   const { logs, events, offices, persons } = req.body;
   if (!logs && !events && !offices && !persons) {
     return res.status(400).json({ error: '备份数据为空' });
@@ -368,7 +456,7 @@ app.post('/api/restore', authRequired, (req, res) => {
 });
 
 // ========== 种子数据 ==========
-app.post('/api/seed', authRequired, (req, res) => {
+app.post('/api/seed', adminRequired, (req, res) => {
   const seeded = get("SELECT value FROM meta WHERE key='seeded'");
   if (seeded) return res.json({ ok: true, message: '已初始化' });
 
@@ -478,8 +566,26 @@ async function start() {
       key TEXT PRIMARY KEY,
       value TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'recorder',
+      displayName TEXT DEFAULT '',
+      createTime TEXT DEFAULT (datetime('now','localtime'))
+    );
   `);
   saveDbNow();
+
+  // 确保默认管理员存在
+  const adminExists = get('SELECT id FROM users WHERE username = ?', [DEFAULT_ADMIN_USER]);
+  if (!adminExists) {
+    run('INSERT INTO users (id, username, password, role, displayName) VALUES (?, ?, ?, ?, ?)',
+      [genId(), DEFAULT_ADMIN_USER, DEFAULT_ADMIN_PASS, 'admin', '系统管理员']);
+    saveDbNow();
+    console.log('已创建默认管理员账号:', DEFAULT_ADMIN_USER);
+  }
 
   app.listen(PORT, () => {
     console.log(`要事日志系统已启动: http://localhost:${PORT}`);

@@ -368,6 +368,26 @@ body {
   font-size: 13px; cursor: pointer; letter-spacing: 1px; transition: background 0.2s;
 }
 .btn-logout:hover { background: rgba(255,255,255,0.15); }
+
+/* ========== 角色徽标 ========== */
+.role-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 3px;
+  font-size: 11px; letter-spacing: 1px; font-weight: 600;
+}
+.role-badge.admin { background: var(--red-primary); color: var(--gold-light); }
+.role-badge.recorder { background: var(--gold-primary); color: #fff; }
+
+/* ========== 用户管理 ========== */
+.user-card {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #fff; border: 1px solid var(--border-gold); border-radius: 6px;
+  padding: 12px 16px; box-shadow: 0 1px 3px var(--shadow-gold);
+  margin-bottom: 8px;
+}
+.user-card .user-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.user-card .user-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.user-card .user-display { font-size: 13px; color: var(--text-muted); }
+.user-card .user-actions { display: flex; gap: 6px; }
 </style>
 </head>
 <body>
@@ -394,7 +414,8 @@ body {
       <div class="header-sub">记录要事 · 大事记 · 高效管理</div>
     </div>
     <div class="header-actions" id="headerActions">
-      <span class="user-badge" id="userBadge" style="display:none;">👤 <span id="userName"></span></span>
+      <span class="user-badge" id="userBadge" style="display:none;">👤 <span id="userName"></span> <span class="role-badge" id="userRoleBadge"></span></span>
+      <button class="btn-logout" id="btnChangePass" style="display:none;" onclick="openChangePasswordModal()">🔑 改密</button>
       <button class="btn-logout" id="btnLogout" style="display:none;" onclick="doLogout()">退出登录</button>
     </div>
   </div>
@@ -403,6 +424,7 @@ body {
     <button class="tab-btn" onclick="switchTab('log')">📋 要事日志</button>
     <button class="tab-btn" onclick="switchTab('office')">🏢 承办处室</button>
     <button class="tab-btn" onclick="switchTab('person')">👤 录入人员</button>
+    <button class="tab-btn" id="tabBtnUser" onclick="switchTab('user')" style="display:none;">👥 用户管理</button>
     <button class="tab-btn" onclick="switchTab('backup')">💾 数据备份</button>
   </div>
 </div>
@@ -474,6 +496,14 @@ body {
       <button class="btn btn-red" onclick="addPerson()">＋ 添加人员</button>
     </div>
     <div class="mgmt-list" id="personList"></div>
+  </div>
+
+  <!-- 用户管理 Tab -->
+  <div class="tab-content" id="tab-user">
+    <div class="toolbar">
+      <button class="btn btn-red" onclick="openAddUserModal()">＋ 新增用户</button>
+    </div>
+    <div id="userList"></div>
   </div>
 
   <!-- 数据备份 Tab -->
@@ -606,6 +636,74 @@ body {
   </div>
 </div>
 
+<!-- 用户：新增/编辑模态框 -->
+<div class="modal-overlay" id="userEditModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <span id="userModalTitle">新增用户</span>
+      <button class="modal-close" onclick="closeModal('userEditModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editUserId">
+      <div class="form-group">
+        <label>用户名<span class="required">*</span></label>
+        <input type="text" id="editUserUsername" placeholder="登录用户名（不可修改）">
+      </div>
+      <div class="form-group" id="editUserPasswordGroup">
+        <label>密码<span class="required">*</span></label>
+        <input type="password" id="editUserPassword" placeholder="登录密码">
+      </div>
+      <div class="form-group" id="editUserPasswordEditGroup" style="display:none;">
+        <label>新密码（留空不修改）</label>
+        <input type="password" id="editUserPasswordEdit" placeholder="留空则不修改密码">
+      </div>
+      <div class="form-group">
+        <label>角色<span class="required">*</span></label>
+        <select id="editUserRole">
+          <option value="admin">管理员</option>
+          <option value="recorder">录入人员</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>显示名称</label>
+        <input type="text" id="editUserDisplayName" placeholder="显示名称（选填）">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline-red" style="color:#999;border-color:#ccc;" onclick="closeModal('userEditModal')">取消</button>
+      <button class="btn btn-red" onclick="saveUser()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 修改密码模态框 -->
+<div class="modal-overlay" id="changePasswordModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <span>修改密码</span>
+      <button class="modal-close" onclick="closeModal('changePasswordModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>旧密码<span class="required">*</span></label>
+        <input type="password" id="changeOldPass" placeholder="输入当前密码">
+      </div>
+      <div class="form-group">
+        <label>新密码<span class="required">*</span></label>
+        <input type="password" id="changeNewPass" placeholder="输入新密码">
+      </div>
+      <div class="form-group">
+        <label>确认新密码<span class="required">*</span></label>
+        <input type="password" id="changeNewPassConfirm" placeholder="再次输入新密码">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline-red" style="color:#999;border-color:#ccc;" onclick="closeModal('changePasswordModal')">取消</button>
+      <button class="btn btn-red" onclick="doChangePassword()">确认修改</button>
+    </div>
+  </div>
+</div>
+
 <!-- 导出选择弹窗 -->
 <div class="modal-overlay" id="exportModal">
   <div class="modal" style="max-width:480px;">
@@ -649,6 +747,8 @@ let cachedPersons = [];
 /* ========== 认证管理 ========== */
 let authToken = localStorage.getItem('ys_token') || '';
 let currentUser = localStorage.getItem('ys_user') || '';
+let currentRole = localStorage.getItem('ys_role') || '';
+let currentDisplayName = localStorage.getItem('ys_displayName') || '';
 
 function getAuthHeaders() {
   return authToken ? { 'Authorization': 'Bearer ' + authToken } : {};
@@ -659,7 +759,16 @@ async function checkAuth() {
   try {
     const res = await fetch('/api/check-auth', { headers: getAuthHeaders() });
     const data = await res.json();
-    if (data.authenticated) { hideLogin(); return true; }
+    if (data.authenticated) {
+      currentUser = data.username;
+      currentRole = data.role;
+      currentDisplayName = data.displayName || data.username;
+      localStorage.setItem('ys_user', currentUser);
+      localStorage.setItem('ys_role', currentRole);
+      localStorage.setItem('ys_displayName', currentDisplayName);
+      hideLogin();
+      return true;
+    }
     else { clearAuth(); showLogin(); return false; }
   } catch(e) { clearAuth(); showLogin(); return false; }
 }
@@ -668,20 +777,52 @@ function showLogin() {
   document.getElementById('loginOverlay').classList.remove('hidden');
   document.getElementById('userBadge').style.display = 'none';
   document.getElementById('btnLogout').style.display = 'none';
+  document.getElementById('btnChangePass').style.display = 'none';
 }
 
 function hideLogin() {
   document.getElementById('loginOverlay').classList.add('hidden');
   document.getElementById('userBadge').style.display = '';
   document.getElementById('btnLogout').style.display = '';
-  document.getElementById('userName').textContent = currentUser;
+  document.getElementById('btnChangePass').style.display = '';
+  document.getElementById('userName').textContent = currentDisplayName || currentUser;
+  var badge = document.getElementById('userRoleBadge');
+  badge.textContent = currentRole === 'admin' ? '管理员' : '录入人员';
+  badge.className = 'role-badge ' + currentRole;
+  // 根据角色显示/隐藏tab和功能
+  applyRoleUI();
+}
+
+function applyRoleUI() {
+  var isAdmin = currentRole === 'admin';
+  // 用户管理tab仅管理员可见
+  document.getElementById('tabBtnUser').style.display = isAdmin ? '' : 'none';
+  // 承办处室、录入人员tab仅管理员可见
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  // office=2, person=3, user=4, backup=5（动态计算更安全）
+  tabBtns.forEach(function(btn) {
+    var text = btn.textContent;
+    if (text.indexOf('承办处室') >= 0) btn.style.display = isAdmin ? '' : 'none';
+    if (text.indexOf('录入人员') >= 0) btn.style.display = isAdmin ? '' : 'none';
+    if (text.indexOf('数据备份') >= 0) btn.style.display = isAdmin ? '' : 'none';
+  });
+  // 大事记和要事日志的"全部删除"按钮仅管理员可见
+  document.querySelectorAll('.btn-danger').forEach(function(btn) {
+    if (btn.textContent.indexOf('全部删除') >= 0) {
+      btn.style.display = isAdmin ? '' : 'none';
+    }
+  });
 }
 
 function clearAuth() {
   authToken = '';
   currentUser = '';
+  currentRole = '';
+  currentDisplayName = '';
   localStorage.removeItem('ys_token');
   localStorage.removeItem('ys_user');
+  localStorage.removeItem('ys_role');
+  localStorage.removeItem('ys_displayName');
 }
 
 async function doLogin() {
@@ -700,8 +841,12 @@ async function doLogin() {
     if (data.ok) {
       authToken = data.token;
       currentUser = data.username;
+      currentRole = data.role;
+      currentDisplayName = data.displayName || data.username;
       localStorage.setItem('ys_token', authToken);
       localStorage.setItem('ys_user', currentUser);
+      localStorage.setItem('ys_role', currentRole);
+      localStorage.setItem('ys_displayName', currentDisplayName);
       hideLogin();
       await initApp();
     } else {
@@ -840,6 +985,7 @@ async function apiAddOffice(name) {
     body: JSON.stringify({ name })
   });
   if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
   if (!res.ok) { const err = await res.json(); throw new Error(err.error || '添加承办处室失败'); }
   return res.json();
 }
@@ -851,6 +997,7 @@ async function apiUpdateOffice(id, name) {
     body: JSON.stringify({ name })
   });
   if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
   if (!res.ok) throw new Error('更新承办处室失败');
   return res.json();
 }
@@ -858,6 +1005,7 @@ async function apiUpdateOffice(id, name) {
 async function apiDeleteOffice(id) {
   const res = await fetch('/api/offices/' + id, { method: 'DELETE', headers: getAuthHeaders() });
   if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
   if (!res.ok) throw new Error('删除承办处室失败');
   return res.json();
 }
@@ -865,6 +1013,7 @@ async function apiDeleteOffice(id) {
 async function apiDeleteAllOffices() {
   const res = await fetch('/api/offices', { method: 'DELETE', headers: getAuthHeaders() });
   if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
   if (!res.ok) throw new Error('删除所有承办处室失败');
   return res.json();
 }
@@ -872,6 +1021,7 @@ async function apiDeleteAllOffices() {
 async function apiDeleteAllLogs() {
   const res = await fetch('/api/logs', { method: 'DELETE', headers: getAuthHeaders() });
   if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
   if (!res.ok) throw new Error('删除所有要事日志失败');
   return res.json();
 }
@@ -879,6 +1029,7 @@ async function apiDeleteAllLogs() {
 async function apiDeleteAllEvents() {
   const res = await fetch('/api/events', { method: 'DELETE', headers: getAuthHeaders() });
   if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
   if (!res.ok) throw new Error('删除所有大事记失败');
   return res.json();
 }
@@ -890,6 +1041,7 @@ async function apiReorderOffices(ids) {
     body: JSON.stringify({ ids })
   });
   if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
   if (!res.ok) throw new Error('排序承办处室失败');
   return res.json();
 }
@@ -908,6 +1060,7 @@ async function apiAddPerson(name) {
     body: JSON.stringify({ name })
   });
   if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
   if (!res.ok) { const err = await res.json(); throw new Error(err.error || '添加录入人员失败'); }
   return res.json();
 }
@@ -919,6 +1072,7 @@ async function apiUpdatePerson(id, name) {
     body: JSON.stringify({ name })
   });
   if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
   if (!res.ok) throw new Error('更新录入人员失败');
   return res.json();
 }
@@ -926,6 +1080,7 @@ async function apiUpdatePerson(id, name) {
 async function apiDeletePerson(id) {
   const res = await fetch('/api/persons/' + id, { method: 'DELETE', headers: getAuthHeaders() });
   if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
   if (!res.ok) throw new Error('删除录入人员失败');
   return res.json();
 }
@@ -964,13 +1119,21 @@ function fillSelect(elId, items, hasEmpty) {
 async function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
   document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-  var btnMap = { event:0, log:1, office:2, person:3, backup:4 };
-  document.querySelectorAll('.tab-btn')[btnMap[tab]].classList.add('active');
+  var btnMap = { event:0, log:1, office:2, person:3, user:4, backup:5 };
+  var idx = btnMap[tab];
+  // 如果tab不可见（如录入人员点用户管理），跳转到大事记
+  var btn = document.querySelectorAll('.tab-btn')[idx];
+  if (!btn || btn.style.display === 'none') {
+    tab = 'event'; idx = 0;
+    btn = document.querySelectorAll('.tab-btn')[0];
+  }
+  btn.classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'log') { await refreshRecorderFilter(); await renderLogList(); }
   if (tab === 'event') { await refreshEventOfficeFilter(); await renderEventList(); }
   if (tab === 'office') await renderOfficeList();
   if (tab === 'person') await renderPersonList();
+  if (tab === 'user') await renderUserList();
   if (tab === 'backup') await updateBackupInfo();
 }
 
@@ -1765,6 +1928,187 @@ async function importBackup(event) {
   reader.readAsText(file);
 }
 
+/* ========== 用户管理 ========== */
+let cachedUsers = [];
+
+async function fetchUsers() {
+  const res = await fetch('/api/users', { headers: getAuthHeaders() });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
+  if (!res.ok) throw new Error('获取用户列表失败');
+  return res.json();
+}
+
+async function apiAddUser(data) {
+  const res = await fetch('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(data)
+  });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
+  if (!res.ok) { const err = await res.json(); throw new Error(err.error || '添加用户失败'); }
+  return res.json();
+}
+
+async function apiUpdateUser(id, data) {
+  const res = await fetch('/api/users/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(data)
+  });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
+  if (!res.ok) { const err = await res.json(); throw new Error(err.error || '更新用户失败'); }
+  return res.json();
+}
+
+async function apiDeleteUser(id) {
+  const res = await fetch('/api/users/' + id, { method: 'DELETE', headers: getAuthHeaders() });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期'); }
+  if (res.status === 403) throw new Error('需要管理员权限');
+  if (!res.ok) { const err = await res.json(); throw new Error(err.error || '删除用户失败'); }
+  return res.json();
+}
+
+async function renderUserList() {
+  try {
+    cachedUsers = await fetchUsers();
+  } catch(e) {
+    document.getElementById('userList').innerHTML = '<div class="empty-state"><p>' + escHtml(e.message) + '</p></div>';
+    return;
+  }
+  var el = document.getElementById('userList');
+  if (!cachedUsers.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><p>暂无用户</p></div>';
+    return;
+  }
+  el.innerHTML = cachedUsers.map(function(u) {
+    var roleLabel = u.role === 'admin' ? '<span class="role-badge admin">管理员</span>' : '<span class="role-badge recorder">录入人员</span>';
+    var displayText = u.displayName ? ' <span class="user-display">(' + escHtml(u.displayName) + ')</span>' : '';
+    var isSelf = u.username === currentUser;
+    var selfMark = isSelf ? ' <span style="font-size:12px;color:var(--text-muted);">（当前账号）</span>' : '';
+    return '<div class="user-card">' +
+      '<div class="user-info">' +
+        '<span class="user-name">' + escHtml(u.username) + '</span>' + displayText + selfMark + ' ' + roleLabel +
+      '</div>' +
+      '<div class="user-actions">' +
+        '<button class="btn btn-sm btn-outline-gold" onclick="editUser(\'' + escHtml(u.id) + '\')">编辑</button>' +
+        (isSelf ? '' : '<button class="btn btn-sm btn-danger" onclick="deleteUser(\'' + escHtml(u.id) + '\')">删除</button>') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openAddUserModal() {
+  document.getElementById('editUserId').value = '';
+  document.getElementById('editUserUsername').value = '';
+  document.getElementById('editUserUsername').disabled = false;
+  document.getElementById('editUserPassword').value = '';
+  document.getElementById('editUserPasswordGroup').style.display = '';
+  document.getElementById('editUserPasswordEditGroup').style.display = 'none';
+  document.getElementById('editUserRole').value = 'recorder';
+  document.getElementById('editUserDisplayName').value = '';
+  document.getElementById('userModalTitle').textContent = '新增用户';
+  openModal('userEditModal');
+}
+
+function editUser(id) {
+  var user = cachedUsers.find(function(u) { return u.id === id; });
+  if (!user) return;
+  document.getElementById('editUserId').value = user.id;
+  document.getElementById('editUserUsername').value = user.username;
+  document.getElementById('editUserUsername').disabled = true;
+  document.getElementById('editUserPassword').value = '';
+  document.getElementById('editUserPasswordGroup').style.display = 'none';
+  document.getElementById('editUserPasswordEditGroup').style.display = '';
+  document.getElementById('editUserPasswordEdit').value = '';
+  document.getElementById('editUserRole').value = user.role;
+  document.getElementById('editUserDisplayName').value = user.displayName || '';
+  document.getElementById('userModalTitle').textContent = '编辑用户';
+  openModal('userEditModal');
+}
+
+async function saveUser() {
+  var id = document.getElementById('editUserId').value;
+  var username = document.getElementById('editUserUsername').value.trim();
+  var role = document.getElementById('editUserRole').value;
+  var displayName = document.getElementById('editUserDisplayName').value.trim();
+
+  if (!id) {
+    // 新增
+    var password = document.getElementById('editUserPassword').value;
+    if (!username) { showToast('请输入用户名'); return; }
+    if (!password) { showToast('请输入密码'); return; }
+    try {
+      await apiAddUser({ username, password, role, displayName });
+      showToast('用户已添加');
+    } catch(e) { showToast(e.message); return; }
+  } else {
+    // 编辑
+    var password = document.getElementById('editUserPasswordEdit').value;
+    var data = { role, displayName };
+    if (password) data.password = password;
+    try {
+      await apiUpdateUser(id, data);
+      showToast('用户已更新');
+      // 如果修改的是自己，更新本地存储
+      var editedUser = cachedUsers.find(function(u) { return u.id === id; });
+      if (editedUser && editedUser.username === currentUser) {
+        currentRole = role;
+        currentDisplayName = displayName || currentUser;
+        localStorage.setItem('ys_role', currentRole);
+        localStorage.setItem('ys_displayName', currentDisplayName);
+        applyRoleUI();
+      }
+    } catch(e) { showToast(e.message); return; }
+  }
+  closeModal('userEditModal');
+  await renderUserList();
+}
+
+async function deleteUser(id) {
+  setConfirm('确认删除', '确定要删除该用户吗？', async function() {
+    try {
+      await apiDeleteUser(id);
+      showToast('用户已删除');
+      await renderUserList();
+    } catch(e) { showToast(e.message); }
+  });
+}
+
+/* ========== 修改密码 ========== */
+function openChangePasswordModal() {
+  document.getElementById('changeOldPass').value = '';
+  document.getElementById('changeNewPass').value = '';
+  document.getElementById('changeNewPassConfirm').value = '';
+  openModal('changePasswordModal');
+}
+
+async function doChangePassword() {
+  var oldPass = document.getElementById('changeOldPass').value;
+  var newPass = document.getElementById('changeNewPass').value;
+  var confirmPass = document.getElementById('changeNewPassConfirm').value;
+  if (!oldPass || !newPass) { showToast('请输入旧密码和新密码'); return; }
+  if (newPass !== confirmPass) { showToast('两次输入的新密码不一致'); return; }
+  try {
+    const res = await fetch('/api/change-password', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('密码修改成功');
+      closeModal('changePasswordModal');
+    } else {
+      showToast(data.error || '修改失败');
+    }
+  } catch(e) {
+    showToast('修改密码失败：' + e.message);
+  }
+}
+
 /* ========== 遮罩关闭 ========== */
 document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
   overlay.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
@@ -1773,8 +2117,10 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
 /* ========== 初始化 ========== */
 async function initApp() {
   try {
-    await seedData();
-    await fillFormSelects();
+    if (currentRole === 'admin') {
+      await seedData();
+      await fillFormSelects();
+    }
     await renderEventList();
   } catch (e) {
     console.error('初始化失败:', e);
