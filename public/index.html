@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>山西社会主义学院要事日志系统</title>
+<style>
+:root {
+  --red-primary: #C41A1A;
+  --red-dark: #8B0000;
+  --red-deeper: #5C0000;
+  --red-light: #E84040;
+  --red-bg: #FFF5F5;
+  --gold-primary: #D4A843;
+  --gold-light: #F0D68A;
+  --gold-bright: #FFD700;
+  --gold-dark: #B8860B;
+  --gold-pale: #FFF8E7;
+  --bg-cream: #FFFAF0;
+  --bg-warm: #FFF9F0;
+  --text-primary: #3D1C00;
+  --text-secondary: #6B4226;
+  --text-muted: #9C7A50;
+  --border-gold: #D4A843;
+  --shadow-red: rgba(196, 26, 26, 0.15);
+  --shadow-gold: rgba(212, 168, 67, 0.2);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: "SimSun", "宋体", "Noto Serif SC", serif;
+  background: var(--bg-cream);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+.top-ornament {
+  height: 4px;
+  background: linear-gradient(90deg, var(--red-dark), var(--gold-primary), var(--red-dark));
+}
+
+.header {
+  background: linear-gradient(135deg, var(--red-deeper) 0%, var(--red-dark) 40%, var(--red-primary) 100%);
+  color: var(--gold-light);
+  padding: 20px 32px 0;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5L35 15L45 15L37 22L40 32L30 26L20 32L23 22L15 15L25 15Z' fill='%23D4A843' fill-opacity='0.06'/%3E%3C/svg%3E") repeat;
+  pointer-events: none;
+}
+.header-inner {
+  position: relative; z-index: 1;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+  margin-bottom: 16px;
+}
+.header h1 {
+  font-size: 26px; font-weight: 700; letter-spacing: 6px;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  display: flex; align-items: center; gap: 12px;
+}
+.header h1 .icon-seal {
+  width: 40px; height: 40px; border: 2px solid var(--gold-primary); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  color: var(--gold-bright); background: rgba(212,168,67,0.1);
+}
+.header-sub {
+  font-size: 13px; color: var(--gold-primary); letter-spacing: 2px;
+  opacity: 0.85;
+}
+.header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.tab-nav {
+  position: relative; z-index: 1;
+  display: flex; gap: 0;
+}
+.tab-btn {
+  padding: 10px 24px; font-family: inherit; font-size: 15px;
+  letter-spacing: 2px; cursor: pointer; border: none;
+  background: rgba(255,255,255,0.08); color: var(--gold-light);
+  border-radius: 6px 6px 0 0; transition: all 0.2s;
+  border-bottom: 3px solid transparent; font-weight: 600;
+}
+.tab-btn:hover { background: rgba(255,255,255,0.15); }
+.tab-btn.active {
+  background: var(--bg-cream); color: var(--red-dark);
+  border-bottom: 3px solid var(--gold-primary);
+  font-weight: 700;
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border: none; border-radius: 4px;
+  font-size: 14px; font-family: inherit; cursor: pointer;
+  transition: all 0.2s; letter-spacing: 1px; white-space: nowrap;
+}
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+  color: #fff; border: 1px solid var(--gold-dark);
+  box-shadow: 0 2px 6px var(--shadow-gold);
+}
+.btn-gold:hover { background: linear-gradient(135deg, var(--gold-light), var(--gold-primary)); }
+.btn-red {
+  background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+  color: var(--gold-light); border: 1px solid var(--red-dark);
+  box-shadow: 0 2px 6px var(--shadow-red);
+}
+.btn-red:hover { background: linear-gradient(135deg, var(--red-light), var(--red-primary)); }
+.btn-outline-red {
+  background: transparent; color: var(--red-primary);
+  border: 1px solid var(--red-primary);
+}
+.btn-outline-red:hover { background: var(--red-bg); }
+.btn-outline-gold {
+  background: transparent; color: var(--gold-dark);
+  border: 1px solid var(--gold-primary);
+}
+.btn-outline-gold:hover { background: var(--gold-pale); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-danger {
+  background: #fff; color: var(--red-primary); border: 1px solid var(--red-primary);
+}
+.btn-danger:hover { background: var(--red-primary); color: #fff; }
+
+.main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 40px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.toolbar {
+  background: #fff; border: 1px solid var(--border-gold); border-radius: 6px;
+  padding: 14px 18px; margin-bottom: 18px;
+  box-shadow: 0 2px 8px var(--shadow-gold);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.toolbar label { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+.toolbar input,
+.toolbar select {
+  padding: 6px 10px; border: 1px solid var(--border-gold); border-radius: 4px;
+  font-family: inherit; font-size: 13px; color: var(--text-primary); background: var(--bg-cream);
+}
+.toolbar input:focus,
+.toolbar select:focus {
+  outline: none; border-color: var(--red-primary); box-shadow: 0 0 0 2px var(--shadow-red);
+}
+.toolbar .sep { width: 1px; height: 24px; background: var(--border-gold); opacity: 0.4; }
+
+.stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.stat-card { background: #fff; border: 1px solid var(--border-gold); border-radius: 6px; padding: 14px 16px; text-align: center; box-shadow: 0 1px 4px var(--shadow-gold); }
+.stat-card .stat-num { font-size: 28px; font-weight: 700; color: var(--red-primary); line-height: 1.2; }
+.stat-card .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; letter-spacing: 1px; }
+
+.log-list { display: flex; flex-direction: column; gap: 12px; }
+.log-card { background: #fff; border: 1px solid var(--border-gold); border-radius: 6px; overflow: hidden; transition: all 0.2s; box-shadow: 0 1px 4px var(--shadow-gold); }
+.log-card:hover { box-shadow: 0 4px 12px var(--shadow-gold); transform: translateY(-1px); }
+.log-card-header { background: linear-gradient(135deg, var(--red-deeper), var(--red-dark)); color: var(--gold-light); padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+.log-card-header .log-title { font-weight: 600; letter-spacing: 1px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log-card-header .log-date { font-size: 12px; opacity: 0.8; white-space: nowrap; margin-left: 12px; }
+.log-card-body { padding: 14px 18px; }
+.log-card-meta { display: flex; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+.log-card-meta span { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+.log-card-content { font-size: 14px; line-height: 1.8; color: var(--text-primary); white-space: pre-wrap; word-break: break-all; max-height: 120px; overflow: hidden; position: relative; }
+.log-card-content.expanded { max-height: none; }
+.log-card-content:not(.expanded)::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(transparent, #fff); pointer-events: none; }
+.log-card-footer { padding: 8px 18px 12px; display: flex; justify-content: flex-end; gap: 8px; }
+
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state p { font-size: 15px; letter-spacing: 1px; }
+
+.mgmt-list { display: flex; flex-direction: column; gap: 8px; }
+.mgmt-item {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #fff; border: 1px solid var(--border-gold); border-radius: 6px;
+  padding: 10px 16px; box-shadow: 0 1px 3px var(--shadow-gold);
+}
+.mgmt-item .name { font-size: 15px; color: var(--text-primary); }
+.mgmt-item .mgmt-actions { display: flex; gap: 6px; }
+
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(92, 0, 0, 0.5); z-index: 1000;
+  justify-content: center; align-items: center; padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: #fff; border-radius: 8px; width: 100%; max-width: 620px;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  border: 2px solid var(--gold-primary);
+}
+.modal-header {
+  background: linear-gradient(135deg, var(--red-deeper), var(--red-dark));
+  color: var(--gold-light); padding: 14px 24px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 18px; font-weight: 600; letter-spacing: 3px;
+}
+.modal-close {
+  background: none; border: none; color: var(--gold-light); font-size: 22px;
+  cursor: pointer; padding: 0 4px; line-height: 1;
+}
+.modal-close:hover { opacity: 0.7; }
+.modal-body { padding: 24px; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block; font-size: 14px; font-weight: 600; color: var(--text-secondary);
+  margin-bottom: 6px; letter-spacing: 1px;
+}
+.form-group label .required { color: var(--red-primary); margin-left: 2px; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--border-gold);
+  border-radius: 4px; font-family: inherit; font-size: 14px;
+  color: var(--text-primary); background: var(--bg-cream); transition: border-color 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none; border-color: var(--red-primary); box-shadow: 0 0 0 2px var(--shadow-red);
+}
+.form-group textarea { min-height: 100px; resize: vertical; line-height: 1.8; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.modal-footer {
+  padding: 14px 24px; border-top: 1px solid var(--border-gold);
+  display: flex; justify-content: flex-end; gap: 10px;
+}
+
+.confirm-modal .modal { max-width: 400px; text-align: center; }
+.confirm-body { padding: 32px 24px; }
+.confirm-body p { font-size: 16px; margin-bottom: 8px; }
+.confirm-body .sub { font-size: 13px; color: var(--text-muted); }
+
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
+  color: var(--gold-light); padding: 12px 20px; border-radius: 4px;
+  font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
+  border: 1px solid var(--gold-primary);
+}
+@keyframes toastIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+.pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 24px; }
+.pagination button {
+  min-width: 36px; height: 36px; border: 1px solid var(--border-gold);
+  border-radius: 4px; background: #fff; color: var(--text-primary);
+  cursor: pointer; font-family: inherit; font-size: 13px; transition: all 0.2s;
+}
+.pagination button:hover { border-color: var(--red-primary); color: var(--red-primary); }
+.pagination button.active { background: var(--red-primary); color: var(--gold-light); border-color: var(--red-primary); }
+.pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.footer { text-align: center; padding: 20px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-gold); background: var(--bg-cream); letter-spacing: 1px; }
+
+@media (max-width: 768px) {
+  .header { padding: 16px 12px 0; }
+  .header h1 { font-size: 20px; letter-spacing: 3px; }
+  .header-inner { flex-direction: column; align-items: flex-start; }
+  .main { padding: 16px 10px 32px; }
+  .form-row { grid-template-columns: 1fr; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  .toolbar { padding: 12px; flex-direction: column; align-items: stretch; gap: 8px; }
+  .toolbar .sep { display: none; }
+  .toolbar label { margin-bottom: -4px; }
+  .toolbar input, .toolbar select { width: 100%; }
+  .tab-btn { padding: 8px 14px; font-size: 13px; letter-spacing: 1px; }
+  .tab-nav { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .modal { margin: 10px; max-height: 95vh; }
+  .header-actions { width: 100%; }
+  .header-actions .btn { flex: 1; justify-content: center; font-size: 14px; padding: 10px 12px; }
+  .log-card-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .log-card-header .log-date { margin-left: 0; }
+  .log-card-meta { flex-direction: column; gap: 4px; }
+  .log-card-footer { flex-wrap: wrap; }
+  .mgmt-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .mgmt-item .mgmt-actions { width: 100%; justify-content: flex-end; }
+  .modal-header { font-size: 16px; padding: 12px 16px; }
+  .modal-body { padding: 16px; }
+  .modal-footer { padding: 12px 16px; }
+  .form-row input, .form-row select, .form-row textarea { font-size: 16px; }
+  .office-checkboxes { max-height: 120px; }
+}
+@media (max-width: 480px) {
+  .header h1 { font-size: 17px; }
+  .stats-bar { grid-template-columns: 1fr 1fr; }
+  .stat-card .stat-num { font-size: 22px; }
+  .tab-btn { padding: 8px 10px; font-size: 12px; }
+  .btn { padding: 8px 14px; font-size: 13px; }
+  .log-card-body { padding: 10px 14px; }
+  .log-card-content { font-size: 13px; }
+  .pagination button { min-width: 32px; height: 32px; font-size: 12px; }
+}
+
+.office-checkboxes {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  max-height: 150px; overflow-y: auto;
+  border: 1px solid var(--gold-primary); border-radius: 4px;
+  padding: 10px; background: var(--gold-pale);
+}
+.office-checkboxes label {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 14px; cursor: pointer; white-space: nowrap;
+  color: var(--text-primary);
+}
+.office-checkboxes input[type="checkbox"] {
+  accent-color: var(--red-primary);
+  width: 16px; height: 16px; cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="top-ornament"></div>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1><span class="icon-seal">記</span>山西社会主义学院要事日志系统</h1>
+      <div class="header-sub">记录要事 · 大事记 · 高效管理</div>
+    </div>
+    <div class="header-actions" id="headerActions"></div>
+  </div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('log')">📋 要事日志</button>
+    <button class="tab-btn" onclick="switchTab('event')">📑 大事记</button>
+    <button class="tab-btn" onclick="switchTab('office')">🏢 承办处室</button>
+    <button class="tab-btn" onclick="switchTab('person')">👤 录入人员</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- 要事日志 Tab -->
+  <div class="tab-content active" id="tab-log">
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="toolbar" id="logToolbar">
+      <label>日期从</label>
+      <input type="date" id="filterDateFrom" onchange="renderLogList()">
+      <label>至</label>
+      <input type="date" id="filterDateTo" onchange="renderLogList()">
+      <div class="sep"></div>
+      <label>录入人员</label>
+      <select id="filterRecorder" onchange="renderLogList()"><option value="">全部</option></select>
+      <label>关键词</label>
+      <input type="text" id="filterKeyword" placeholder="搜索标题/内容" oninput="renderLogList()">
+      <button class="btn btn-sm btn-outline-red" style="margin-left:auto;" onclick="clearLogFilters()">重置</button>
+    </div>
+    <div class="header-actions" style="margin-bottom:16px;">
+      <button class="btn btn-gold" onclick="openAddLogModal()">＋ 新增要事</button>
+      <button class="btn btn-outline-red" style="color:var(--red-primary);border-color:var(--red-primary);" onclick="openExportModal('log')">📄 导出要事日志Word</button>
+    </div>
+    <div class="log-list" id="logList"></div>
+    <div class="pagination" id="logPagination"></div>
+  </div>
+
+  <!-- 大事记 Tab -->
+  <div class="tab-content" id="tab-event">
+    <div class="stats-bar" id="eventStatsBar"></div>
+    <div class="toolbar">
+      <label>日期从</label>
+      <input type="date" id="filterEventDateFrom" onchange="renderEventList()">
+      <label>至</label>
+      <input type="date" id="filterEventDateTo" onchange="renderEventList()">
+      <div class="sep"></div>
+      <label>承办处室</label>
+      <select id="filterEventOffice" onchange="renderEventList()"><option value="">全部</option></select>
+      <label>关键词</label>
+      <input type="text" id="filterEventKeyword" placeholder="搜索标题/内容" oninput="renderEventList()">
+      <button class="btn btn-sm btn-outline-red" style="margin-left:auto;" onclick="clearEventFilters()">重置</button>
+    </div>
+    <div class="header-actions" style="margin-bottom:16px;">
+      <button class="btn btn-gold" onclick="openAddEventModal()">＋ 新增大事记</button>
+      <button class="btn btn-outline-red" style="color:var(--red-primary);border-color:var(--red-primary);" onclick="openExportModal('event')">📄 导出大事记Word</button>
+    </div>
+    <div class="log-list" id="eventList"></div>
+    <div class="pagination" id="eventPagination"></div>
+  </div>
+
+  <!-- 承办处室管理 Tab -->
+  <div class="tab-content" id="tab-office">
+    <div class="toolbar">
+      <input type="text" id="newOfficeName" placeholder="输入处室名称" style="width:240px;padding:8px 12px;border:1px solid var(--border-gold);border-radius:4px;font-family:inherit;font-size:14px;">
+      <button class="btn btn-red" onclick="addOffice()">＋ 添加处室</button>
+      <button class="btn btn-outline-red" style="margin-left:auto;" onclick="confirmDeleteAllOffices()">🗑 全部删除</button>
+    </div>
+    <div class="mgmt-list" id="officeList"></div>
+  </div>
+
+  <!-- 录入人员管理 Tab -->
+  <div class="tab-content" id="tab-person">
+    <div class="toolbar">
+      <input type="text" id="newPersonName" placeholder="输入人员姓名" style="width:200px;padding:8px 12px;border:1px solid var(--border-gold);border-radius:4px;font-family:inherit;font-size:14px;">
+      <button class="btn btn-red" onclick="addPerson()">＋ 添加人员</button>
+    </div>
+    <div class="mgmt-list" id="personList"></div>
+  </div>
+
+</div>
+
+<div class="footer">山西社会主义学院要事日志系统</div>
+
+<!-- 要事日志：新增/编辑模态框 -->
+<div class="modal-overlay" id="logEditModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="logModalTitle">新增要事</span>
+      <button class="modal-close" onclick="closeModal('logEditModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editLogId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>日期<span class="required">*</span></label>
+          <input type="date" id="editLogDate">
+        </div>
+        <div class="form-group">
+          <label>录入人员</label>
+          <select id="editLogRecorder"><option value="">请选择（选填）</option></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>标题<span class="required">*</span></label>
+        <input type="text" id="editLogTitle" placeholder="请输入标题">
+      </div>
+      <div class="form-group">
+        <label>详细内容<span class="required">*</span></label>
+        <textarea id="editLogContent" placeholder="请输入详细内容"></textarea>
+      </div>
+      <div class="form-group">
+        <label>备注</label>
+        <textarea id="editLogRemark" placeholder="备注信息（选填）" style="min-height:60px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline-red" style="color:#999;border-color:#ccc;" onclick="closeModal('logEditModal')">取消</button>
+      <button class="btn btn-red" onclick="saveLog()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 大事记：新增/编辑模态框 -->
+<div class="modal-overlay" id="eventEditModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="eventModalTitle">新增大事记</span>
+      <button class="modal-close" onclick="closeModal('eventEditModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editEventId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>日期<span class="required">*</span></label>
+          <input type="date" id="editEventDate">
+        </div>
+        <div class="form-group">
+          <label>承办处室<span class="required">*</span></label>
+          <div id="editEventOfficeCheckboxes" class="office-checkboxes"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>标题<span class="required">*</span></label>
+        <input type="text" id="editEventTitle" placeholder="请输入大事记标题">
+      </div>
+      <div class="form-group">
+        <label>详细内容<span class="required">*</span></label>
+        <textarea id="editEventContent" placeholder="请输入详细内容"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline-red" style="color:#999;border-color:#ccc;" onclick="closeModal('eventEditModal')">取消</button>
+      <button class="btn btn-red" onclick="saveEvent()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 查看详情模态框 -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="viewModalTitle">详情</span>
+      <button class="modal-close" onclick="closeModal('viewModal')">&times;</button>
+    </div>
+    <div class="modal-body" id="viewBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline-red" style="color:#999;border-color:#ccc;" onclick="closeModal('viewModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 确认删除弹窗 -->
+<div class="modal-overlay confirm-modal" id="confirmModal">
+  <div class="modal">
+    <div class="modal-header"><span id="confirmTitle">确认删除</span><button class="modal-close" onclick="closeModal('confirmModal')">&times;</button></div>
+    <div class="confirm-body"><p id="confirmMsg">确定要删除吗？</p><div class="sub" id="confirmSub">此操作不可撤销</div></div>
+    <div class="modal-footer" style="justify-content:center;">
+      <button class="btn btn-outline-red" style="color:#999;border-color:#ccc;" onclick="closeModal('confirmModal')">取消</button>
+      <button class="btn btn-red" id="confirmDeleteBtn">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 导出选择弹窗 -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><span id="exportModalTitle">导出Word</span><button class="modal-close" onclick="closeModal('exportModal')">&times;</button></div>
+    <div style="padding:20px 24px;">
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-weight:bold;margin-bottom:8px;color:var(--red-dark);font-size:14px;" id="exportFilterLabel">选择录入人员</label>
+        <select id="exportFilterSelect" style="width:100%;padding:8px 12px;border:1px solid var(--gold-primary);border-radius:4px;font-size:14px;font-family:inherit;background:var(--gold-pale);">
+          <option value="">全部（不筛选）</option>
+        </select>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-weight:bold;margin-bottom:8px;color:var(--red-dark);font-size:14px;">日期范围</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="date" id="exportDateFrom" style="flex:1;padding:8px;border:1px solid var(--gold-primary);border-radius:4px;font-family:inherit;background:var(--gold-pale);">
+          <span style="color:var(--text-muted);">至</span>
+          <input type="date" id="exportDateTo" style="flex:1;padding:8px;border:1px solid var(--gold-primary);border-radius:4px;font-family:inherit;background:var(--gold-pale);">
+        </div>
+      </div>
+      <div style="background:var(--gold-pale);border:1px solid var(--gold-primary);border-radius:4px;padding:10px 14px;font-size:13px;color:var(--text-secondary);margin-bottom:16px;" id="exportPreviewInfo">
+        将导出符合条件的所有记录
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;">
+      <button class="btn btn-outline-red" style="color:#999;border-color:#ccc;" onclick="closeModal('exportModal')">取消</button>
+      <button class="btn btn-red" onclick="doExportFromModal()">📄 确认导出</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const PAGE_SIZE = 10;
+let currentLogPage = 1;
+let currentEventPage = 1;
+let deleteCallback = null;
+let cachedOffices = [];
+let cachedPersons = [];
+
+/* ========== API 数据层函数 ========== */
+
+// 要事日志 API
+async function fetchLogs(params) {
+  const query = new URLSearchParams(params).toString();
+  const res = await fetch('/api/logs?' + query);
+  if (!res.ok) throw new Error('获取要事日志失败');
+  return res.json();
+}
+
+async function fetchAllLogs(params) {
+  const queryParams = { ...params, pageSize: 99999 };
+  const query = new URLSearchParams(queryParams).toString();
+  const res = await fetch('/api/logs?' + query);
+  if (!res.ok) throw new Error('获取要事日志失败');
+  return res.json();
+}
+
+async function fetchLogById(id) {
+  const res = await fetch('/api/logs/' + id);
+  if (!res.ok) throw new Error('获取要事日志失败');
+  return res.json();
+}
+
+async function addLog(data) {
+  const res = await fetch('/api/logs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('添加要事日志失败');
+  return res.json();
+}
+
+async function updateLog(id, data) {
+  const res = await fetch('/api/logs/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('更新要事日志失败');
+  return res.json();
+}
+
+async function deleteLog(id) {
+  const res = await fetch('/api/logs/' + id, { method: 'DELETE' });
+  if (!res.ok) throw new Error('删除要事日志失败');
+  return res.json();
+}
+
+// 大事记 API
+async function fetchEvents(params) {
+  const query = new URLSearchParams(params).toString();
+  const res = await fetch('/api/events?' + query);
+  if (!res.ok) throw new Error('获取大事记失败');
+  return res.json();
+}
+
+async function fetchAllEvents(params) {
+  const queryParams = { ...params, pageSize: 99999 };
+  const query = new URLSearchParams(queryParams).toString();
+  const res = await fetch('/api/events?' + query);
+  if (!res.ok) throw new Error('获取大事记失败');
+  return res.json();
+}
+
+async function fetchEventById(id) {
+  const res = await fetch('/api/events/' + id);
+  if (!res.ok) throw new Error('获取大事记失败');
+  return res.json();
+}
+
+async function addEvent(data) {
+  const res = await fetch('/api/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('添加大事记失败');
+  return res.json();
+}
+
+async function updateEvent(id, data) {
+  const res = await fetch('/api/events/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('更新大事记失败');
+  return res.json();
+}
+
+async function deleteEvent(id) {
+  const res = await fetch('/api/events/' + id, { method: 'DELETE' });
+  if (!res.ok) throw new Error('删除大事记失败');
+  return res.json();
+}
+
+// 承办处室 API
+async function fetchOffices() {
+  const res = await fetch('/api/offices');
+  if (!res.ok) throw new Error('获取承办处室失败');
+  return res.json();
+}
+
+async function apiAddOffice(name) {
+  const res = await fetch('/api/offices', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+  if (!res.ok) { const err = await res.json(); throw new Error(err.error || '添加承办处室失败'); }
+  return res.json();
+}
+
+async function apiUpdateOffice(id, name) {
+  const res = await fetch('/api/offices/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+  if (!res.ok) throw new Error('更新承办处室失败');
+  return res.json();
+}
+
+async function apiDeleteOffice(id) {
+  const res = await fetch('/api/offices/' + id, { method: 'DELETE' });
+  if (!res.ok) throw new Error('删除承办处室失败');
+  return res.json();
+}
+
+async function apiDeleteAllOffices() {
+  const res = await fetch('/api/offices', { method: 'DELETE' });
+  if (!res.ok) throw new Error('删除所有承办处室失败');
+  return res.json();
+}
+
+async function apiReorderOffices(ids) {
+  const res = await fetch('/api/offices/reorder', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids })
+  });
+  if (!res.ok) throw new Error('排序承办处室失败');
+  return res.json();
+}
+
+// 录入人员 API
+async function fetchPersons() {
+  const res = await fetch('/api/persons');
+  if (!res.ok) throw new Error('获取录入人员失败');
+  return res.json();
+}
+
+async function apiAddPerson(name) {
+  const res = await fetch('/api/persons', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+  if (!res.ok) { const err = await res.json(); throw new Error(err.error || '添加录入人员失败'); }
+  return res.json();
+}
+
+async function apiUpdatePerson(id, name) {
+  const res = await fetch('/api/persons/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+  if (!res.ok) throw new Error('更新录入人员失败');
+  return res.json();
+}
+
+async function apiDeletePerson(id) {
+  const res = await fetch('/api/persons/' + id, { method: 'DELETE' });
+  if (!res.ok) throw new Error('删除录入人员失败');
+  return res.json();
+}
+
+// 种子数据
+async function seedData() {
+  const res = await fetch('/api/seed', { method: 'POST' });
+  if (!res.ok) throw new Error('初始化种子数据失败');
+  return res.json();
+}
+
+/* ========== 工具函数 ========== */
+function escHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg) {
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg; c.appendChild(t);
+  setTimeout(function() { t.remove(); }, 2600);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function fillSelect(elId, items, hasEmpty) {
+  var sel = document.getElementById(elId);
+  var html = hasEmpty ? '<option value="">请选择</option>' : '';
+  items.forEach(function(item) { html += '<option value="' + escHtml(item) + '">' + escHtml(item) + '</option>'; });
+  sel.innerHTML = html;
+}
+
+async function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  var btnMap = { log:0, event:1, office:2, person:3 };
+  document.querySelectorAll('.tab-btn')[btnMap[tab]].classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'log') { await refreshRecorderFilter(); await renderLogList(); }
+  if (tab === 'event') { await refreshEventOfficeFilter(); await renderEventList(); }
+  if (tab === 'office') await renderOfficeList();
+  if (tab === 'person') await renderPersonList();
+}
+
+async function refreshRecorderFilter() {
+  cachedPersons = await fetchPersons();
+  var sel = document.getElementById('filterRecorder');
+  var html = '<option value="">全部</option>';
+  cachedPersons.forEach(function(p) { html += '<option value="' + escHtml(p.name) + '">' + escHtml(p.name) + '</option>'; });
+  sel.innerHTML = html;
+}
+
+async function refreshEventOfficeFilter() {
+  cachedOffices = await fetchOffices();
+  var sel = document.getElementById('filterEventOffice');
+  var html = '<option value="">全部</option>';
+  cachedOffices.forEach(function(o) { html += '<option value="' + escHtml(o.name) + '">' + escHtml(o.name) + '</option>'; });
+  sel.innerHTML = html;
+}
+
+async function fillFormSelects() {
+  cachedOffices = await fetchOffices();
+  fillEventOfficeCheckboxes(cachedOffices);
+  cachedPersons = await fetchPersons();
+  var names = cachedPersons.map(function(p) { return p.name; });
+  fillSelect('editLogRecorder', names, true);
+}
+
+function fillEventOfficeCheckboxes(offices) {
+  var container = document.getElementById('editEventOfficeCheckboxes');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!offices.length) {
+    container.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">暂无承办处室，请先添加</span>';
+    return;
+  }
+  offices.forEach(function(o) {
+    var label = document.createElement('label');
+    label.innerHTML = '<input type="checkbox" name="eventOffice" value="' + escHtml(o.name) + '"> ' + escHtml(o.name);
+    container.appendChild(label);
+  });
+}
+
+function getSelectedOffices() {
+  var checkboxes = document.querySelectorAll('#editEventOfficeCheckboxes input[name="eventOffice"]:checked');
+  var selected = [];
+  checkboxes.forEach(function(cb) { selected.push(cb.value); });
+  return selected;
+}
+
+function setSelectedOffices(officeStr) {
+  var vals = officeStr ? officeStr.split('、') : [];
+  var checkboxes = document.querySelectorAll('#editEventOfficeCheckboxes input[name="eventOffice"]');
+  checkboxes.forEach(function(cb) { cb.checked = vals.indexOf(cb.value) >= 0; });
+}
+
+/* ========== 承办处室管理 ========== */
+async function renderOfficeList() {
+  cachedOffices = await fetchOffices();
+  var el = document.getElementById('officeList');
+  if (!cachedOffices.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🏢</div><p>暂无承办处室，请先添加</p></div>';
+    return;
+  }
+  el.innerHTML = cachedOffices.map(function(o) {
+    return '<div class="mgmt-item" data-id="' + escHtml(o.id) + '">' +
+      '<span class="name">' + escHtml(o.name) + '</span>' +
+      '<span class="mgmt-actions">' +
+        '<button class="btn btn-sm btn-outline-gold" onclick="editOffice(\'' + escHtml(o.id) + '\')">修改</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="deleteOfficeById(\'' + escHtml(o.id) + '\')">删除</button>' +
+      '</span>' +
+    '</div>';
+  }).join('');
+}
+
+async function addOffice() {
+  var input = document.getElementById('newOfficeName');
+  var name = input.value.trim();
+  if (!name) { showToast('请输入处室名称'); return; }
+  var exists = cachedOffices.some(function(o) { return o.name === name; });
+  if (exists) { showToast('该处室已存在'); return; }
+  try {
+    await apiAddOffice(name);
+    input.value = '';
+    await renderOfficeList();
+    await refreshEventOfficeFilter();
+    showToast('承办处室已添加');
+  } catch(e) { showToast(e.message); }
+}
+
+async function editOffice(id) {
+  var office = cachedOffices.find(function(o) { return o.id === id; });
+  if (!office) return;
+  var newName = prompt('修改处室名称：', office.name);
+  if (newName === null) return;
+  newName = newName.trim();
+  if (!newName) { showToast('名称不能为空'); return; }
+  var exists = cachedOffices.some(function(o) { return o.id !== id && o.name === newName; });
+  if (exists) { showToast('该处室已存在'); return; }
+  await apiUpdateOffice(id, newName);
+  await renderOfficeList();
+  await refreshEventOfficeFilter();
+  showToast('承办处室已修改');
+}
+
+async function deleteOfficeById(id) {
+  setConfirm('确认删除', '确定要删除该承办处室吗？', async function() {
+    await apiDeleteOffice(id);
+    await renderOfficeList();
+    await refreshEventOfficeFilter();
+    showToast('承办处室已删除');
+  });
+}
+
+async function confirmDeleteAllOffices() {
+  if (!cachedOffices.length) { showToast('暂无承办处室'); return; }
+  setConfirm('确认全部删除', '确定要删除所有承办处室吗？此操作不可撤销。', async function() {
+    await apiDeleteAllOffices();
+    await renderOfficeList();
+    await refreshEventOfficeFilter();
+    showToast('所有承办处室已删除');
+  });
+}
+
+/* ========== 录入人员管理 ========== */
+async function renderPersonList() {
+  cachedPersons = await fetchPersons();
+  var el = document.getElementById('personList');
+  if (!cachedPersons.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">👤</div><p>暂无录入人员，请先添加</p></div>';
+    return;
+  }
+  el.innerHTML = cachedPersons.map(function(p) {
+    return '<div class="mgmt-item" data-id="' + escHtml(p.id) + '">' +
+      '<span class="name">' + escHtml(p.name) + '</span>' +
+      '<span class="mgmt-actions">' +
+        '<button class="btn btn-sm btn-outline-gold" onclick="editPerson(\'' + escHtml(p.id) + '\')">修改</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="deletePersonById(\'' + escHtml(p.id) + '\')">删除</button>' +
+      '</span>' +
+    '</div>';
+  }).join('');
+}
+
+async function addPerson() {
+  var input = document.getElementById('newPersonName');
+  var name = input.value.trim();
+  if (!name) { showToast('请输入人员姓名'); return; }
+  var exists = cachedPersons.some(function(p) { return p.name === name; });
+  if (exists) { showToast('该人员已存在'); return; }
+  try {
+    await apiAddPerson(name);
+    input.value = '';
+    await renderPersonList();
+    await refreshRecorderFilter();
+    showToast('录入人员已添加');
+  } catch(e) { showToast(e.message); }
+}
+
+async function editPerson(id) {
+  var person = cachedPersons.find(function(p) { return p.id === id; });
+  if (!person) return;
+  var newName = prompt('修改人员姓名：', person.name);
+  if (newName === null) return;
+  newName = newName.trim();
+  if (!newName) { showToast('姓名不能为空'); return; }
+  var exists = cachedPersons.some(function(p) { return p.id !== id && p.name === newName; });
+  if (exists) { showToast('该人员已存在'); return; }
+  await apiUpdatePerson(id, newName);
+  await renderPersonList();
+  await refreshRecorderFilter();
+  showToast('录入人员已修改');
+}
+
+async function deletePersonById(id) {
+  setConfirm('确认删除', '确定要删除该录入人员吗？', async function() {
+    await apiDeletePerson(id);
+    await renderPersonList();
+    await refreshRecorderFilter();
+    showToast('录入人员已删除');
+  });
+}
+
+/* ========== 要事日志 ========== */
+function clearLogFilters() {
+  ['filterDateFrom','filterDateTo','filterKeyword'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('filterRecorder').value = '';
+  currentLogPage = 1;
+  renderLogList();
+}
+
+async function renderLogList() {
+  var params = {
+    page: currentLogPage,
+    pageSize: PAGE_SIZE,
+    dateFrom: document.getElementById('filterDateFrom').value,
+    dateTo: document.getElementById('filterDateTo').value,
+    recorder: document.getElementById('filterRecorder').value,
+    keyword: document.getElementById('filterKeyword').value.trim()
+  };
+
+  var result = await fetchLogs(params);
+  var logs = result.data || [];
+  var total = result.total || 0;
+  var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentLogPage > totalPages) currentLogPage = totalPages;
+
+  var listEl = document.getElementById('logList');
+  if (!total) {
+    listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>暂无要事记录</p></div>';
+  } else {
+    listEl.innerHTML = logs.map(function(log) {
+      var meta = '';
+      if (log.recorder) meta += '<span>👤 ' + escHtml(log.recorder) + '</span>';
+      var escapedId = log.id;
+      return '<div class="log-card">' +
+        '<div class="log-card-header"><span class="log-title">' + escHtml(log.title) + '</span><span class="log-date">' + log.date + '</span></div>' +
+        '<div class="log-card-body">' +
+          '<div class="log-card-meta">' + meta + '</div>' +
+          '<div class="log-card-content">' + escHtml(log.content) + '</div>' +
+        '</div>' +
+        '<div class="log-card-footer">' +
+          '<button class="btn btn-sm btn-outline-gold" onclick="viewLog(\'' + escapedId + '\')">查看</button>' +
+          '<button class="btn btn-sm btn-outline-red" onclick="editLog(\'' + escapedId + '\')">编辑</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="confirmDeleteLog(\'' + escapedId + '\')">删除</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+  renderPagination('logPagination', totalPages, currentLogPage);
+  await renderLogStats();
+}
+
+async function renderLogStats() {
+  try {
+    var res = await fetch('/api/stats');
+    var stats = await res.json();
+    // 获取今日记录数
+    var today = new Date().toISOString().slice(0, 10);
+    var todayResult = await fetchLogs({ dateFrom: today, dateTo: today, pageSize: 1 });
+    document.getElementById('statsBar').innerHTML =
+      '<div class="stat-card"><div class="stat-num">' + (stats.logCount||0) + '</div><div class="stat-label">总记录数</div></div>' +
+      '<div class="stat-card"><div class="stat-num">' + (todayResult.total||0) + '</div><div class="stat-label">今日记录</div></div>';
+  } catch(e) {
+    document.getElementById('statsBar').innerHTML = '';
+  }
+}
+
+async function openAddLogModal() {
+  await fillFormSelects();
+  document.getElementById('editLogId').value = '';
+  document.getElementById('logModalTitle').textContent = '新增要事';
+  document.getElementById('editLogDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('editLogTitle').value = '';
+  document.getElementById('editLogContent').value = '';
+  document.getElementById('editLogRemark').value = '';
+  openModal('logEditModal');
+}
+
+async function editLog(id) {
+  await fillFormSelects();
+  var log = await fetchLogById(id);
+  if (!log) return;
+  document.getElementById('editLogId').value = log.id;
+  document.getElementById('logModalTitle').textContent = '编辑要事';
+  document.getElementById('editLogDate').value = log.date || '';
+  document.getElementById('editLogRecorder').value = log.recorder || '';
+  document.getElementById('editLogTitle').value = log.title || '';
+  document.getElementById('editLogContent').value = log.content || '';
+  document.getElementById('editLogRemark').value = log.remark || '';
+  openModal('logEditModal');
+}
+
+async function saveLog() {
+  var id = document.getElementById('editLogId').value;
+  var date = document.getElementById('editLogDate').value;
+  var recorder = document.getElementById('editLogRecorder').value;
+  var title = document.getElementById('editLogTitle').value.trim();
+  var content = document.getElementById('editLogContent').value.trim();
+  var remark = document.getElementById('editLogRemark').value.trim();
+  if (!date) { showToast('请选择日期'); return; }
+  if (!title) { showToast('请输入标题'); return; }
+  if (!content) { showToast('请输入内容'); return; }
+
+  var data = { date: date, recorder: recorder, title: title, content: content, remark: remark };
+  if (id) {
+    await updateLog(id, data);
+    showToast('要事已更新');
+  } else {
+    await addLog(data);
+    showToast('要事已添加');
+  }
+  closeModal('logEditModal');
+  currentLogPage = 1;
+  await renderLogList();
+}
+
+async function viewLog(id) {
+  var log = await fetchLogById(id);
+  if (!log) return;
+  var meta = '';
+  if (log.recorder) meta += '<span style="font-size:13px;color:var(--text-muted);">👤 ' + escHtml(log.recorder) + '</span>';
+  document.getElementById('viewModalTitle').textContent = '要事详情';
+  document.getElementById('viewBody').innerHTML =
+    '<div style="margin-bottom:16px;">' +
+      '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">' + meta + '</div>' +
+      '<h2 style="font-size:20px;font-weight:700;color:var(--red-dark);margin-bottom:8px;">' + escHtml(log.title) + '</h2>' +
+      '<div style="font-size:13px;color:var(--text-muted);">📅 ' + log.date + '</div>' +
+    '</div>' +
+    '<div style="border-top:1px solid var(--border-gold);padding-top:16px;">' +
+      '<div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;font-weight:600;">详细内容</div>' +
+      '<div style="font-size:15px;line-height:2;white-space:pre-wrap;color:var(--text-primary);">' + escHtml(log.content) + '</div>' +
+    '</div>' +
+    (log.remark ? '<div style="border-top:1px solid var(--border-gold);padding-top:16px;margin-top:16px;"><div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;font-weight:600;">备注</div><div style="font-size:14px;line-height:1.8;white-space:pre-wrap;color:var(--text-secondary);">' + escHtml(log.remark) + '</div></div>' : '');
+  openModal('viewModal');
+}
+
+async function confirmDeleteLog(id) {
+  setConfirm('确认删除', '确定要删除该条要事记录吗？', async function() {
+    await deleteLog(id);
+    showToast('要事已删除');
+    await renderLogList();
+  });
+}
+
+/* ========== 大事记 ========== */
+function clearEventFilters() {
+  ['filterEventDateFrom','filterEventDateTo','filterEventKeyword'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('filterEventOffice').value = '';
+  currentEventPage = 1;
+  renderEventList();
+}
+
+async function renderEventList() {
+  var params = {
+    page: currentEventPage,
+    pageSize: PAGE_SIZE,
+    dateFrom: document.getElementById('filterEventDateFrom').value,
+    dateTo: document.getElementById('filterEventDateTo').value,
+    office: document.getElementById('filterEventOffice').value,
+    keyword: document.getElementById('filterEventKeyword').value.trim()
+  };
+
+  var result = await fetchEvents(params);
+  var events = result.data || [];
+  var total = result.total || 0;
+  var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentEventPage > totalPages) currentEventPage = totalPages;
+
+  var listEl = document.getElementById('eventList');
+  if (!total) {
+    listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">📑</div><p>暂无大事记记录</p></div>';
+  } else {
+    listEl.innerHTML = events.map(function(ev) {
+      var meta = '<span style="font-size:13px;color:var(--text-secondary);">🏢 ' + escHtml(ev.office) + '</span>';
+      var escapedId = ev.id;
+      return '<div class="log-card">' +
+        '<div class="log-card-header"><span class="log-title">' + escHtml(ev.title) + '</span><span class="log-date">' + ev.date + '</span></div>' +
+        '<div class="log-card-body">' +
+          '<div class="log-card-meta">' + meta + '</div>' +
+          '<div class="log-card-content">' + escHtml(ev.content) + '</div>' +
+        '</div>' +
+        '<div class="log-card-footer">' +
+          '<button class="btn btn-sm btn-outline-gold" onclick="viewEvent(\'' + escapedId + '\')">查看</button>' +
+          '<button class="btn btn-sm btn-outline-red" onclick="editEvent(\'' + escapedId + '\')">编辑</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="confirmDeleteEvent(\'' + escapedId + '\')">删除</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+  renderPagination('eventPagination', totalPages, currentEventPage);
+  await renderEventStats();
+}
+
+async function renderEventStats() {
+  try {
+    var res = await fetch('/api/stats');
+    var stats = await res.json();
+    document.getElementById('eventStatsBar').innerHTML =
+      '<div class="stat-card"><div class="stat-num">' + (stats.eventCount||0) + '</div><div class="stat-label">大事记总数</div></div>' +
+      '<div class="stat-card"><div class="stat-num">' + (stats.officeCount||0) + '</div><div class="stat-label">承办处室</div></div>';
+  } catch(e) {
+    document.getElementById('eventStatsBar').innerHTML = '';
+  }
+}
+
+async function openAddEventModal() {
+  await fillFormSelects();
+  document.getElementById('editEventId').value = '';
+  document.getElementById('eventModalTitle').textContent = '新增大事记';
+  document.getElementById('editEventDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('editEventTitle').value = '';
+  document.getElementById('editEventContent').value = '';
+  setSelectedOffices('');
+  openModal('eventEditModal');
+}
+
+async function editEvent(id) {
+  await fillFormSelects();
+  var ev = await fetchEventById(id);
+  if (!ev) return;
+  document.getElementById('editEventId').value = ev.id;
+  document.getElementById('eventModalTitle').textContent = '编辑大事记';
+  document.getElementById('editEventDate').value = ev.date || '';
+  setSelectedOffices(ev.office || '');
+  document.getElementById('editEventTitle').value = ev.title || '';
+  document.getElementById('editEventContent').value = ev.content || '';
+  openModal('eventEditModal');
+}
+
+async function saveEvent() {
+  var id = document.getElementById('editEventId').value;
+  var date = document.getElementById('editEventDate').value;
+  var selectedOffices = getSelectedOffices();
+  var office = selectedOffices.join('、');
+  var title = document.getElementById('editEventTitle').value.trim();
+  var content = document.getElementById('editEventContent').value.trim();
+  if (!date) { showToast('请选择日期'); return; }
+  if (!office) { showToast('请选择承办处室（必填）'); return; }
+  if (!title) { showToast('请输入标题'); return; }
+  if (!content) { showToast('请输入内容'); return; }
+
+  var data = { date: date, office: office, title: title, content: content };
+  if (id) {
+    await updateEvent(id, data);
+    showToast('大事记已更新');
+  } else {
+    await addEvent(data);
+    showToast('大事记已添加');
+  }
+  closeModal('eventEditModal');
+  currentEventPage = 1;
+  await renderEventList();
+}
+
+async function viewEvent(id) {
+  var ev = await fetchEventById(id);
+  if (!ev) return;
+  var meta = '<span style="font-size:13px;color:var(--text-secondary);">🏢 ' + escHtml(ev.office) + '</span>';
+  document.getElementById('viewModalTitle').textContent = '大事记详情';
+  document.getElementById('viewBody').innerHTML =
+    '<div style="margin-bottom:16px;">' +
+      '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">' + meta + '</div>' +
+      '<h2 style="font-size:20px;font-weight:700;color:var(--red-dark);margin-bottom:8px;">' + escHtml(ev.title) + '</h2>' +
+      '<div style="font-size:13px;color:var(--text-muted);">📅 ' + ev.date + '</div>' +
+    '</div>' +
+    '<div style="border-top:1px solid var(--border-gold);padding-top:16px;">' +
+      '<div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;font-weight:600;">详细内容</div>' +
+      '<div style="font-size:15px;line-height:2;white-space:pre-wrap;color:var(--text-primary);">' + escHtml(ev.content) + '</div>' +
+    '</div>';
+  openModal('viewModal');
+}
+
+async function confirmDeleteEvent(id) {
+  setConfirm('确认删除', '确定要删除该条大事记吗？', async function() {
+    await deleteEvent(id);
+    showToast('大事记已删除');
+    await renderEventList();
+  });
+}
+
+/* ========== 分页 ========== */
+function renderPagination(elId, totalPages, current) {
+  var el = document.getElementById(elId);
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  var html = '<button ' + (current===1?'disabled':'') + ' onclick="goPage(\'' + elId + '\',' + (current-1) + ',' + totalPages + ')">‹</button>';
+  var pages = [];
+  if (totalPages <= 7) { for (var i = 1; i <= totalPages; i++) pages.push(i); }
+  else {
+    pages.push(1);
+    if (current > 3) pages.push('...');
+    for (var i = Math.max(2, current-1); i <= Math.min(totalPages-1, current+1); i++) pages.push(i);
+    if (current < totalPages-2) pages.push('...');
+    pages.push(totalPages);
+  }
+  pages.forEach(function(p) {
+    if (p === '...') { html += '<button disabled>…</button>'; }
+    else { html += '<button class="' + (p===current?'active':'') + '" onclick="goPage(\'' + elId + '\',' + p + ',' + totalPages + ')">' + p + '</button>'; }
+  });
+  html += '<button ' + (current===totalPages?'disabled':'') + ' onclick="goPage(\'' + elId + '\',' + (current+1) + ',' + totalPages + ')">›</button>';
+  el.innerHTML = html;
+}
+function goPage(elId, p, totalPages) {
+  if (p < 1 || p > totalPages) return;
+  if (elId === 'logPagination') { currentLogPage = p; renderLogList(); }
+  if (elId === 'eventPagination') { currentEventPage = p; renderEventList(); }
+  window.scrollTo({top:200, behavior:'smooth'});
+}
+
+/* ========== 通用确认删除 ========== */
+function setConfirm(title, msg, callback) {
+  deleteCallback = callback;
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  openModal('confirmModal');
+}
+document.getElementById('confirmDeleteBtn').onclick = function() {
+  closeModal('confirmModal');
+  if (deleteCallback) { deleteCallback(); deleteCallback = null; }
+};
+
+/* ========== 导出弹窗 ========== */
+var exportType = 'log'; // 'log' 或 'event'
+
+async function openExportModal(type) {
+  exportType = type;
+  var sel = document.getElementById('exportFilterSelect');
+  var label = document.getElementById('exportFilterLabel');
+  var titleEl = document.getElementById('exportModalTitle');
+
+  if (type === 'log') {
+    titleEl.textContent = '导出要事日志';
+    label.textContent = '选择录入人员';
+    var persons = await fetchPersons();
+    sel.innerHTML = '<option value="">全部（不筛选）</option>';
+    persons.forEach(function(p) { sel.innerHTML += '<option value="' + escHtml(p.name) + '">' + escHtml(p.name) + '</option>'; });
+    // 回填当前筛选条件
+    var curRecorder = document.getElementById('filterRecorder').value;
+    if (curRecorder) sel.value = curRecorder;
+    document.getElementById('exportDateFrom').value = document.getElementById('filterDateFrom').value;
+    document.getElementById('exportDateTo').value = document.getElementById('filterDateTo').value;
+  } else {
+    titleEl.textContent = '导出大事记';
+    label.textContent = '选择承办处室';
+    var offices = await fetchOffices();
+    sel.innerHTML = '<option value="">全部（不筛选）</option>';
+    offices.forEach(function(o) { sel.innerHTML += '<option value="' + escHtml(o.name) + '">' + escHtml(o.name) + '</option>'; });
+    var curOffice = document.getElementById('filterEventOffice').value;
+    if (curOffice) sel.value = curOffice;
+    document.getElementById('exportDateFrom').value = document.getElementById('filterEventDateFrom').value;
+    document.getElementById('exportDateTo').value = document.getElementById('filterEventDateTo').value;
+  }
+  updateExportPreview();
+  document.getElementById('exportModal').classList.add('active');
+}
+
+async function updateExportPreview() {
+  var filterVal = document.getElementById('exportFilterSelect').value;
+  var dFrom = document.getElementById('exportDateFrom').value;
+  var dTo = document.getElementById('exportDateTo').value;
+  var count = 0;
+
+  if (exportType === 'log') {
+    var params = { dateFrom: dFrom, dateTo: dTo, recorder: filterVal };
+    var result = await fetchAllLogs(params);
+    count = result.data ? result.data.length : 0;
+  } else {
+    var params = { dateFrom: dFrom, dateTo: dTo, office: filterVal };
+    var result = await fetchAllEvents(params);
+    count = result.data ? result.data.length : 0;
+  }
+
+  var filterName = exportType === 'log' ? '人员' : '处室';
+  var filterText = filterVal ? '按' + filterName + '「' + filterVal + '」筛选' : '不筛选' + filterName;
+  var dateText = (dFrom || dTo) ? ('，日期 ' + (dFrom||'起始') + ' ~ ' + (dTo||'至今')) : '';
+  document.getElementById('exportPreviewInfo').textContent = filterText + dateText + '，共 ' + count + ' 条记录将被导出';
+}
+
+document.getElementById('exportFilterSelect').addEventListener('change', updateExportPreview);
+document.getElementById('exportDateFrom').addEventListener('change', updateExportPreview);
+document.getElementById('exportDateTo').addEventListener('change', updateExportPreview);
+
+async function doExportFromModal() {
+  var filterVal = document.getElementById('exportFilterSelect').value;
+  var dFrom = document.getElementById('exportDateFrom').value;
+  var dTo = document.getElementById('exportDateTo').value;
+
+  if (exportType === 'log') {
+    var params = { dateFrom: dFrom, dateTo: dTo, recorder: filterVal };
+    var result = await fetchAllLogs(params);
+    var logs = result.data || [];
+    if (filterVal) logs = logs.filter(function(l) { return (l.recorder||'') === filterVal; });
+    logs.sort(function(a,b) { return a.date.localeCompare(b.date) || (a.createTime||'').localeCompare(b.createTime||''); });
+    if (!logs.length) { showToast('没有符合条件的记录'); return; }
+    var earliest = logs[0].date;
+    var latest = logs[logs.length - 1].date;
+    var rows = '';
+    logs.forEach(function(log, i) {
+      var bg = i % 2 === 0 ? '#FFFAF0' : '#FFF5F5';
+      var contentHtml = '<div style="font-family:黑体,SimHei,sans-serif;font-weight:bold;font-size:14pt;color:#5C0000;margin-bottom:4pt;line-height:1.5;">' + escHtml(log.title) + '</div><div style="font-family:仿宋_GB2312,仿宋,FangSong,serif;">' + escHtml(log.content) + '</div>';
+      rows += '<tr>' +
+        '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';">' + (i+1) + '</td>' +
+        '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';">' + log.date + '</td>' +
+        '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';">' + escHtml(log.recorder||'-') + '</td>' +
+        '<td style="border:1pt solid #D4A843;padding:6pt 8pt;font-size:10pt;background:' + bg + ';line-height:1.6;">' + contentHtml + '</td>' +
+        '<td style="border:1pt solid #D4A843;padding:6pt 8pt;font-size:10pt;background:' + bg + ';font-family:黑体,SimHei,sans-serif;">' + escHtml(log.remark||'-') + '</td>' +
+      '</tr>';
+    });
+    var wordTitle = filterVal ? filterVal + '要事日志' : '要事日志';
+    downloadWord(rows, ['序号','日期','录入人员','详细内容','备注'], wordTitle, wordTitle, earliest, latest);
+  } else {
+    var params = { dateFrom: dFrom, dateTo: dTo, office: filterVal };
+    var result = await fetchAllEvents(params);
+    var events = result.data || [];
+    if (filterVal) events = events.filter(function(e) { var offices = (e.office||'').split('、'); return offices.indexOf(filterVal) >= 0; });
+    events.sort(function(a,b) { return a.date.localeCompare(b.date) || (a.createTime||'').localeCompare(b.createTime||''); });
+    if (!events.length) { showToast('没有符合条件的记录'); return; }
+    var earliest = events[0].date;
+    var latest = events[events.length - 1].date;
+    var rows = '';
+    events.forEach(function(ev, i) {
+      var bg = i % 2 === 0 ? '#FFFAF0' : '#FFF5F5';
+      var contentHtml = '<div style="font-family:黑体,SimHei,sans-serif;font-weight:bold;font-size:14pt;color:#5C0000;margin-bottom:4pt;line-height:1.5;">' + escHtml(ev.title) + '</div><div style="font-family:仿宋_GB2312,仿宋,FangSong,serif;">' + escHtml(ev.content) + '</div>';
+      var officeHtml = (ev.office||'').split('、').map(function(o){return escHtml(o);}).join('<br>');
+      rows += '<tr>' +
+        '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';">' + (i+1) + '</td>' +
+        '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';">' + ev.date + '</td>' +
+        '<td style="border:1pt solid #D4A843;padding:6pt 8pt;font-size:10pt;background:' + bg + ';line-height:1.6;">' + contentHtml + '</td>' +
+        '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';line-height:1.8;font-family:黑体,SimHei,sans-serif;">' + officeHtml + '</td>' +
+      '</tr>';
+    });
+    var subtitle = filterVal ? '（承办处室：' + filterVal + '）' : '';
+    downloadWord(rows, ['序号','日期','详细内容','承办处室'], '大事记' + subtitle, '山西社会主义学院大事记', earliest, latest);
+  }
+  closeModal('exportModal');
+}
+
+/* ========== Word导出 - 要事日志 ========== */
+async function doExportWord() {
+  var dFrom = document.getElementById('filterDateFrom').value;
+  var dTo = document.getElementById('filterDateTo').value;
+  var recorder = document.getElementById('filterRecorder').value;
+  var kw = document.getElementById('filterKeyword').value.trim();
+
+  var params = { dateFrom: dFrom, dateTo: dTo, recorder: recorder, keyword: kw };
+  var result = await fetchAllLogs(params);
+  var logs = result.data || [];
+  logs.sort(function(a,b) { return a.date.localeCompare(b.date) || (a.createTime||'').localeCompare(b.createTime||''); });
+  if (!logs.length) { showToast('没有可导出的记录'); return; }
+  var earliest = logs[0].date;
+  var latest = logs[logs.length - 1].date;
+  var rows = '';
+  logs.forEach(function(log, i) {
+    var bg = i % 2 === 0 ? '#FFFAF0' : '#FFF5F5';
+    var contentHtml = '<div style="font-family:黑体,SimHei,sans-serif;font-weight:bold;font-size:14pt;color:#5C0000;margin-bottom:4pt;line-height:1.5;">' + escHtml(log.title) + '</div><div style="font-family:仿宋_GB2312,仿宋,FangSong,serif;">' + escHtml(log.content) + '</div>';
+    rows += '<tr>' +
+      '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';">' + (i+1) + '</td>' +
+      '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';">' + log.date + '</td>' +
+      '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';">' + escHtml(log.recorder||'-') + '</td>' +
+      '<td style="border:1pt solid #D4A843;padding:6pt 8pt;font-size:10pt;background:' + bg + ';line-height:1.6;">' + contentHtml + '</td>' +
+      '<td style="border:1pt solid #D4A843;padding:6pt 8pt;font-size:10pt;background:' + bg + ';font-family:黑体,SimHei,sans-serif;">' + escHtml(log.remark||'-') + '</td>' +
+    '</tr>';
+  });
+  downloadWord(rows, ['序号','日期','录入人员','详细内容','备注'], '要事日志', '要事日志', earliest, latest);
+}
+
+/* ========== Word导出 - 大事记 ========== */
+async function exportEventWord() {
+  var dFrom = document.getElementById('filterEventDateFrom').value;
+  var dTo = document.getElementById('filterEventDateTo').value;
+  var office = document.getElementById('filterEventOffice').value;
+  var kw = document.getElementById('filterEventKeyword').value.trim();
+
+  var params = { dateFrom: dFrom, dateTo: dTo, office: office, keyword: kw };
+  var result = await fetchAllEvents(params);
+  var events = result.data || [];
+  events.sort(function(a,b) { return a.date.localeCompare(b.date) || (a.createTime||'').localeCompare(b.createTime||''); });
+  if (!events.length) { showToast('没有可导出的记录'); return; }
+  var earliest = events[0].date;
+  var latest = events[events.length - 1].date;
+  var rows = '';
+  events.forEach(function(ev, i) {
+    var bg = i % 2 === 0 ? '#FFFAF0' : '#FFF5F5';
+    var contentHtml = '<div style="font-family:黑体,SimHei,sans-serif;font-weight:bold;font-size:14pt;color:#5C0000;margin-bottom:4pt;line-height:1.5;">' + escHtml(ev.title) + '</div><div style="font-family:仿宋_GB2312,仿宋,FangSong,serif;">' + escHtml(ev.content) + '</div>';
+    var officeHtml = (ev.office||'').split('、').map(function(o){return escHtml(o);}).join('<br>');
+    rows += '<tr>' +
+      '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';">' + (i+1) + '</td>' +
+      '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';">' + ev.date + '</td>' +
+      '<td style="border:1pt solid #D4A843;padding:6pt 8pt;font-size:10pt;background:' + bg + ';line-height:1.6;">' + contentHtml + '</td>' +
+      '<td style="border:1pt solid #D4A843;padding:6pt 8pt;text-align:center;font-size:11pt;background:' + bg + ';line-height:1.8;font-family:黑体,SimHei,sans-serif;">' + officeHtml + '</td>' +
+    '</tr>';
+  });
+  downloadWord(rows, ['序号','日期','详细内容','承办处室'], '大事记', '山西社会主义学院大事记', earliest, latest);
+}
+
+/* ========== Word下载通用 ========== */
+function downloadWord(rowsHtml, headers, title, wordTitle, earliestDate, latestDate) {
+  var thHtml = headers.map(function(h) {
+    return '<th style="border:1pt solid #D4A843;padding:8pt 8pt;background:#8B0000;color:#F0D68A;font-size:11pt;text-align:center;font-weight:bold;">' + h + '</th>';
+  }).join('');
+  var dateInfo = '';
+  if (earliestDate && latestDate) {
+    dateInfo = earliestDate === latestDate ? '记录日期：' + earliestDate : '记录日期：' + earliestDate + ' ～ ' + latestDate;
+  } else if (earliestDate) {
+    dateInfo = '记录起始日期：' + earliestDate;
+  }
+  var recordCount = rowsHtml.split('</tr>').length - 1;
+  var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+    '<head><meta charset="UTF-8">' +
+    '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->' +
+    '<style>@page{size:A4 landscape;margin:2cm 1.5cm;} body{font-family:仿宋_GB2312,仿宋,FangSong,serif;font-size:12pt;color:#3D1C00;} table{border-collapse:collapse;width:100%;} tr{page-break-inside:avoid;} thead{display:table-header-group;}</style>' +
+    '</head><body>' +
+    '<div style="height:4pt;background:linear-gradient(90deg,#8B0000,#D4A843,#8B0000);margin-bottom:16pt;"></div>' +
+    '<div style="text-align:center;margin-bottom:6pt;"><span style="font-family:方正小标宋简体,华文中宋,宋体,SimSun,serif;font-size:22pt;font-weight:bold;color:#8B0000;letter-spacing:6pt;">' + wordTitle + '</span></div>' +
+    '<div style="text-align:center;margin-bottom:16pt;font-size:10pt;color:#9C7A50;">' + dateInfo + ' &nbsp;|&nbsp; 共 ' + recordCount + ' 条记录</div>' +
+    '<table><thead><tr>' + thHtml + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+    '<div style="height:4pt;background:linear-gradient(90deg,#8B0000,#D4A843,#8B0000);margin-top:16pt;"></div>' +
+    '<div style="text-align:center;margin-top:8pt;font-size:9pt;color:#9C7A50;">山西社会主义学院 · 导出时间：' + new Date().toLocaleString('zh-CN') + '</div>' +
+    '</body></html>';
+  var blob = new Blob(['\ufeff' + html], {type:'application/msword'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = wordTitle + '_' + new Date().toISOString().slice(0,10) + '.doc';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Word文档已导出');
+}
+
+/* ========== 遮罩关闭 ========== */
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+  overlay.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+});
+
+/* ========== 初始化 ========== */
+(async function init() {
+  try {
+    await seedData();
+    await fillFormSelects();
+    await renderLogList();
+  } catch (e) {
+    console.error('初始化失败:', e);
+    showToast('初始化失败，请刷新页面重试');
+  }
+})();
+</script>
+</body>
+</html>

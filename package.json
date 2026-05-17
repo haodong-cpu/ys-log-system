@@ -1,0 +1,17 @@
+{
+  "name": "ys-log-system",
+  "version": "1.0.0",
+  "description": "山西社会主义学院要事日志系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sql.js": "^1.10.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
