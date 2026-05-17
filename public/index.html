@@ -312,9 +312,78 @@ body {
   accent-color: var(--red-primary);
   width: 16px; height: 16px; cursor: pointer;
 }
+
+/* ========== 登录页 ========== */
+.login-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, var(--red-deeper) 0%, var(--red-dark) 40%, var(--red-primary) 100%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.login-overlay.hidden { display: none; }
+.login-box {
+  background: #fff; border-radius: 12px; padding: 48px 40px;
+  width: 400px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  text-align: center;
+}
+.login-box .login-icon {
+  width: 64px; height: 64px; margin: 0 auto 20px;
+  background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+  border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  font-size: 32px; color: var(--gold-bright);
+}
+.login-box h2 {
+  font-size: 22px; color: var(--red-dark); letter-spacing: 4px;
+  margin-bottom: 8px;
+}
+.login-box .login-sub {
+  font-size: 13px; color: var(--text-muted); margin-bottom: 28px;
+}
+.login-box input {
+  width: 100%; padding: 12px 16px; border: 1px solid #ddd;
+  border-radius: 6px; font-size: 15px; font-family: inherit;
+  margin-bottom: 14px; transition: border-color 0.2s;
+}
+.login-box input:focus { outline: none; border-color: var(--red-primary); }
+.login-box .btn-login {
+  width: 100%; padding: 13px; background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+  color: var(--gold-light); border: none; border-radius: 6px;
+  font-size: 16px; font-family: inherit; letter-spacing: 4px;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.login-box .btn-login:hover { opacity: 0.9; }
+.login-box .login-error {
+  color: var(--red-primary); font-size: 13px; margin-top: 12px;
+  min-height: 20px;
+}
+.user-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 4px;
+  background: rgba(255,255,255,0.12); color: var(--gold-light);
+  font-size: 13px; letter-spacing: 1px;
+}
+.btn-logout {
+  padding: 6px 14px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3);
+  background: transparent; color: var(--gold-light); font-family: inherit;
+  font-size: 13px; cursor: pointer; letter-spacing: 1px; transition: background 0.2s;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.15); }
 </style>
 </head>
 <body>
+
+<!-- 登录遮罩 -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-icon">記</div>
+    <h2>要事日志系统</h2>
+    <div class="login-sub">山西社会主义学院 · 管理员登录</div>
+    <input type="text" id="loginUser" placeholder="用户名" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="密码" autocomplete="current-password">
+    <button class="btn-login" onclick="doLogin()">登 录</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
 
 <div class="top-ornament"></div>
 
@@ -324,7 +393,10 @@ body {
       <h1><span class="icon-seal">記</span>山西社会主义学院要事日志系统</h1>
       <div class="header-sub">记录要事 · 大事记 · 高效管理</div>
     </div>
-    <div class="header-actions" id="headerActions"></div>
+    <div class="header-actions" id="headerActions">
+      <span class="user-badge" id="userBadge" style="display:none;">👤 <span id="userName"></span></span>
+      <button class="btn-logout" id="btnLogout" style="display:none;" onclick="doLogout()">退出登录</button>
+    </div>
   </div>
   <div class="tab-nav">
     <button class="tab-btn active" onclick="switchTab('event')">📑 大事记</button>
@@ -574,6 +646,82 @@ let deleteCallback = null;
 let cachedOffices = [];
 let cachedPersons = [];
 
+/* ========== 认证管理 ========== */
+let authToken = localStorage.getItem('ys_token') || '';
+let currentUser = localStorage.getItem('ys_user') || '';
+
+function getAuthHeaders() {
+  return authToken ? { 'Authorization': 'Bearer ' + authToken } : {};
+}
+
+async function checkAuth() {
+  if (!authToken) { showLogin(); return false; }
+  try {
+    const res = await fetch('/api/check-auth', { headers: getAuthHeaders() });
+    const data = await res.json();
+    if (data.authenticated) { hideLogin(); return true; }
+    else { clearAuth(); showLogin(); return false; }
+  } catch(e) { clearAuth(); showLogin(); return false; }
+}
+
+function showLogin() {
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  document.getElementById('userBadge').style.display = 'none';
+  document.getElementById('btnLogout').style.display = 'none';
+}
+
+function hideLogin() {
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('userBadge').style.display = '';
+  document.getElementById('btnLogout').style.display = '';
+  document.getElementById('userName').textContent = currentUser;
+}
+
+function clearAuth() {
+  authToken = '';
+  currentUser = '';
+  localStorage.removeItem('ys_token');
+  localStorage.removeItem('ys_user');
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errorEl = document.getElementById('loginError');
+  errorEl.textContent = '';
+  if (!username || !password) { errorEl.textContent = '请输入用户名和密码'; return; }
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      authToken = data.token;
+      currentUser = data.username;
+      localStorage.setItem('ys_token', authToken);
+      localStorage.setItem('ys_user', currentUser);
+      hideLogin();
+      await initApp();
+    } else {
+      errorEl.textContent = data.error || '登录失败';
+    }
+  } catch(e) {
+    errorEl.textContent = '网络错误，请重试';
+  }
+}
+
+async function doLogout() {
+  try { await fetch('/api/logout', { method: 'POST', headers: getAuthHeaders() }); } catch(e) {}
+  clearAuth();
+  showLogin();
+}
+
+// 登录表单回车提交
+document.getElementById('loginPass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
+
 /* ========== API 数据层函数 ========== */
 
 // 要事日志 API
@@ -601,9 +749,10 @@ async function fetchLogById(id) {
 async function addLog(data) {
   const res = await fetch('/api/logs', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('添加要事日志失败');
   return res.json();
 }
@@ -611,15 +760,17 @@ async function addLog(data) {
 async function updateLog(id, data) {
   const res = await fetch('/api/logs/' + id, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('更新要事日志失败');
   return res.json();
 }
 
 async function deleteLog(id) {
-  const res = await fetch('/api/logs/' + id, { method: 'DELETE' });
+  const res = await fetch('/api/logs/' + id, { method: 'DELETE', headers: getAuthHeaders() });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('删除要事日志失败');
   return res.json();
 }
@@ -649,9 +800,10 @@ async function fetchEventById(id) {
 async function addEvent(data) {
   const res = await fetch('/api/events', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('添加大事记失败');
   return res.json();
 }
@@ -659,15 +811,17 @@ async function addEvent(data) {
 async function updateEvent(id, data) {
   const res = await fetch('/api/events/' + id, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(data)
   });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('更新大事记失败');
   return res.json();
 }
 
 async function deleteEvent(id) {
-  const res = await fetch('/api/events/' + id, { method: 'DELETE' });
+  const res = await fetch('/api/events/' + id, { method: 'DELETE', headers: getAuthHeaders() });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('删除大事记失败');
   return res.json();
 }
@@ -682,9 +836,10 @@ async function fetchOffices() {
 async function apiAddOffice(name) {
   const res = await fetch('/api/offices', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ name })
   });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) { const err = await res.json(); throw new Error(err.error || '添加承办处室失败'); }
   return res.json();
 }
@@ -692,33 +847,38 @@ async function apiAddOffice(name) {
 async function apiUpdateOffice(id, name) {
   const res = await fetch('/api/offices/' + id, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ name })
   });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('更新承办处室失败');
   return res.json();
 }
 
 async function apiDeleteOffice(id) {
-  const res = await fetch('/api/offices/' + id, { method: 'DELETE' });
+  const res = await fetch('/api/offices/' + id, { method: 'DELETE', headers: getAuthHeaders() });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('删除承办处室失败');
   return res.json();
 }
 
 async function apiDeleteAllOffices() {
-  const res = await fetch('/api/offices', { method: 'DELETE' });
+  const res = await fetch('/api/offices', { method: 'DELETE', headers: getAuthHeaders() });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('删除所有承办处室失败');
   return res.json();
 }
 
 async function apiDeleteAllLogs() {
-  const res = await fetch('/api/logs', { method: 'DELETE' });
+  const res = await fetch('/api/logs', { method: 'DELETE', headers: getAuthHeaders() });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('删除所有要事日志失败');
   return res.json();
 }
 
 async function apiDeleteAllEvents() {
-  const res = await fetch('/api/events', { method: 'DELETE' });
+  const res = await fetch('/api/events', { method: 'DELETE', headers: getAuthHeaders() });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('删除所有大事记失败');
   return res.json();
 }
@@ -726,9 +886,10 @@ async function apiDeleteAllEvents() {
 async function apiReorderOffices(ids) {
   const res = await fetch('/api/offices/reorder', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ ids })
   });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('排序承办处室失败');
   return res.json();
 }
@@ -743,9 +904,10 @@ async function fetchPersons() {
 async function apiAddPerson(name) {
   const res = await fetch('/api/persons', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ name })
   });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) { const err = await res.json(); throw new Error(err.error || '添加录入人员失败'); }
   return res.json();
 }
@@ -753,22 +915,25 @@ async function apiAddPerson(name) {
 async function apiUpdatePerson(id, name) {
   const res = await fetch('/api/persons/' + id, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify({ name })
   });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('更新录入人员失败');
   return res.json();
 }
 
 async function apiDeletePerson(id) {
-  const res = await fetch('/api/persons/' + id, { method: 'DELETE' });
+  const res = await fetch('/api/persons/' + id, { method: 'DELETE', headers: getAuthHeaders() });
+  if (res.status === 401) { clearAuth(); showLogin(); throw new Error('登录已过期，请重新登录'); }
   if (!res.ok) throw new Error('删除录入人员失败');
   return res.json();
 }
 
 // 种子数据
 async function seedData() {
-  const res = await fetch('/api/seed', { method: 'POST' });
+  const res = await fetch('/api/seed', { method: 'POST', headers: getAuthHeaders() });
+  if (res.status === 401) return;
   if (!res.ok) throw new Error('初始化种子数据失败');
   return res.json();
 }
@@ -1582,7 +1747,7 @@ async function importBackup(event) {
 
       var res = await fetch('/api/restore', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(data)
       });
       var result = await res.json();
@@ -1606,7 +1771,7 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
 });
 
 /* ========== 初始化 ========== */
-(async function init() {
+async function initApp() {
   try {
     await seedData();
     await fillFormSelects();
@@ -1614,6 +1779,12 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
   } catch (e) {
     console.error('初始化失败:', e);
     showToast('初始化失败，请刷新页面重试');
+  }
+}
+
+(async function init() {
+  if (await checkAuth()) {
+    await initApp();
   }
 })();
 </script>

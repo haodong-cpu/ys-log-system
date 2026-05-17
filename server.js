@@ -2,11 +2,17 @@ const express = require('express');
 const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'ys_log.db');
+
+// 管理员认证配置
+const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
+const TOKENS = new Set(); // 存放有效的登录 token
 
 // 确保数据目录存在
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -14,6 +20,23 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 // 中间件
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ========== 认证中间件 ==========
+function authRequired(req, res, next) {
+  const token = req.headers['authorization']?.replace('Bearer ', '');
+  if (!token || !TOKENS.has(token)) {
+    return res.status(401).json({ error: '未登录或登录已过期' });
+  }
+  next();
+}
+
+// 写操作需要认证
+function authWrite(req, res, next) {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    return authRequired(req, res, next);
+  }
+  next();
+}
 
 // 数据库实例
 let db;
@@ -66,6 +89,29 @@ function get(sql, params) {
   return rows.length > 0 ? rows[0] : null;
 }
 
+// ========== 登录 API ==========
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    const token = crypto.randomBytes(32).toString('hex');
+    TOKENS.add(token);
+    res.json({ ok: true, token, username: ADMIN_USER });
+  } else {
+    res.status(401).json({ error: '用户名或密码错误' });
+  }
+});
+
+app.post('/api/logout', (req, res) => {
+  const token = req.headers['authorization']?.replace('Bearer ', '');
+  if (token) TOKENS.delete(token);
+  res.json({ ok: true });
+});
+
+app.get('/api/check-auth', (req, res) => {
+  const token = req.headers['authorization']?.replace('Bearer ', '');
+  res.json({ authenticated: !!(token && TOKENS.has(token)) });
+});
+
 // ========== 要事日志 API ==========
 app.get('/api/logs', (req, res) => {
   const { recorder, dateFrom, dateTo, keyword, page = 1, pageSize = 10 } = req.query;
@@ -87,7 +133,7 @@ app.get('/api/logs', (req, res) => {
   res.json({ total, page: Number(page), pageSize: Number(pageSize), data: rows });
 });
 
-app.post('/api/logs', (req, res) => {
+app.post('/api/logs', authRequired, (req, res) => {
   const { id, date, recorder, title, content, remark } = req.body;
   const logId = id || genId();
   run('INSERT INTO logs (id, date, recorder, title, content, remark) VALUES (?, ?, ?, ?, ?, ?)',
@@ -95,7 +141,7 @@ app.post('/api/logs', (req, res) => {
   res.json({ id: logId, ok: true });
 });
 
-app.put('/api/logs/:id', (req, res) => {
+app.put('/api/logs/:id', authRequired, (req, res) => {
   const { date, recorder, title, content, remark } = req.body;
   run('UPDATE logs SET date=?, recorder=?, title=?, content=?, remark=? WHERE id=?',
     [date, recorder || '', title, content || '', remark || '', req.params.id]);
@@ -108,12 +154,12 @@ app.get('/api/logs/:id', (req, res) => {
   res.json(row);
 });
 
-app.delete('/api/logs/:id', (req, res) => {
+app.delete('/api/logs/:id', authRequired, (req, res) => {
   run('DELETE FROM logs WHERE id=?', [req.params.id]);
   res.json({ ok: true });
 });
 
-app.delete('/api/logs', (req, res) => {
+app.delete('/api/logs', authRequired, (req, res) => {
   run('DELETE FROM logs');
   saveDbNow();
   res.json({ ok: true });
@@ -143,7 +189,7 @@ app.get('/api/events', (req, res) => {
   res.json({ total, page: Number(page), pageSize: Number(pageSize), data: rows });
 });
 
-app.post('/api/events', (req, res) => {
+app.post('/api/events', authRequired, (req, res) => {
   const { id, date, office, title, content } = req.body;
   const eventId = id || genId();
   run('INSERT INTO events (id, date, office, title, content) VALUES (?, ?, ?, ?, ?)',
@@ -151,7 +197,7 @@ app.post('/api/events', (req, res) => {
   res.json({ id: eventId, ok: true });
 });
 
-app.put('/api/events/:id', (req, res) => {
+app.put('/api/events/:id', authRequired, (req, res) => {
   const { date, office, title, content } = req.body;
   run('UPDATE events SET date=?, office=?, title=?, content=? WHERE id=?',
     [date, office || '', title, content || '', req.params.id]);
@@ -164,12 +210,12 @@ app.get('/api/events/:id', (req, res) => {
   res.json(row);
 });
 
-app.delete('/api/events/:id', (req, res) => {
+app.delete('/api/events/:id', authRequired, (req, res) => {
   run('DELETE FROM events WHERE id=?', [req.params.id]);
   res.json({ ok: true });
 });
 
-app.delete('/api/events', (req, res) => {
+app.delete('/api/events', authRequired, (req, res) => {
   run('DELETE FROM events');
   saveDbNow();
   res.json({ ok: true });
@@ -181,7 +227,7 @@ app.get('/api/offices', (req, res) => {
   res.json(rows);
 });
 
-app.post('/api/offices', (req, res) => {
+app.post('/api/offices', authRequired, (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: '处室名称不能为空' });
   const existing = get('SELECT id FROM offices WHERE name = ?', [name]);
@@ -193,24 +239,24 @@ app.post('/api/offices', (req, res) => {
   res.json({ id, ok: true });
 });
 
-app.put('/api/offices/:id', (req, res) => {
+app.put('/api/offices/:id', authRequired, (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: '处室名称不能为空' });
   run('UPDATE offices SET name=? WHERE id=?', [name, req.params.id]);
   res.json({ ok: true });
 });
 
-app.delete('/api/offices/:id', (req, res) => {
+app.delete('/api/offices/:id', authRequired, (req, res) => {
   run('DELETE FROM offices WHERE id=?', [req.params.id]);
   res.json({ ok: true });
 });
 
-app.delete('/api/offices', (req, res) => {
+app.delete('/api/offices', authRequired, (req, res) => {
   run('DELETE FROM offices');
   res.json({ ok: true });
 });
 
-app.put('/api/offices/reorder', (req, res) => {
+app.put('/api/offices/reorder', authRequired, (req, res) => {
   const { ids } = req.body;
   ids.forEach((id, idx) => {
     run('UPDATE offices SET sortOrder=? WHERE id=?', [idx + 1, id]);
@@ -225,7 +271,7 @@ app.get('/api/persons', (req, res) => {
   res.json(rows);
 });
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', authRequired, (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: '人员姓名不能为空' });
   const existing = get('SELECT id FROM persons WHERE name = ?', [name]);
@@ -235,14 +281,14 @@ app.post('/api/persons', (req, res) => {
   res.json({ id, ok: true });
 });
 
-app.put('/api/persons/:id', (req, res) => {
+app.put('/api/persons/:id', authRequired, (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: '人员姓名不能为空' });
   run('UPDATE persons SET name=? WHERE id=?', [name, req.params.id]);
   res.json({ ok: true });
 });
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', authRequired, (req, res) => {
   run('DELETE FROM persons WHERE id=?', [req.params.id]);
   res.json({ ok: true });
 });
@@ -270,7 +316,7 @@ app.get('/api/backup', (req, res) => {
 });
 
 // ========== 数据恢复 API（追加模式，保留原数据） ==========
-app.post('/api/restore', (req, res) => {
+app.post('/api/restore', authRequired, (req, res) => {
   const { logs, events, offices, persons } = req.body;
   if (!logs && !events && !offices && !persons) {
     return res.status(400).json({ error: '备份数据为空' });
@@ -322,7 +368,7 @@ app.post('/api/restore', (req, res) => {
 });
 
 // ========== 种子数据 ==========
-app.post('/api/seed', (req, res) => {
+app.post('/api/seed', authRequired, (req, res) => {
   const seeded = get("SELECT value FROM meta WHERE key='seeded'");
   if (seeded) return res.json({ ok: true, message: '已初始化' });
 
